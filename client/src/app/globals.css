@@ -2,6 +2,17 @@
 
 @theme {
 
+    --color-black-50: #e7e6e6;
+    --color-black-100: #cfcdcd;
+    --color-black-200: #a09b9b;
+    --color-black-300: #70696a;
+    --color-black-400: #413738;
+    --color-black-500: #110506;
+    --color-black-600: #0e0405;
+    --color-black-700: #0a0304;
+    --color-black-800: #070202;
+    --color-black-900: #030101;
+
     --color-white-50: #fffefe;
     --color-white-100: #fefcfc;
     --color-white-200: #fdf9fa;
