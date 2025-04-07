@@ -1,6 +1,14 @@
 @import "tailwindcss";
 
+body {
+    @apply bg-white-500 text-black-500;
+}
+
+
 @theme {
+
+    --shadow-sm-red: 0 4px 8px 0 rgba(255, 60, 68, 0.25);
+    --shadow-sm-green: 0 4px 8px 0 rgba(56, 169, 92, 0.25);
 
     --color-black-50: #e7e6e6;
     --color-black-100: #cfcdcd;
