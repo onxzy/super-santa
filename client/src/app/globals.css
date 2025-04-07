@@ -1,15 +1,49 @@
 @import "tailwindcss";
 
 @theme {
-    --color-christmas-red-50: #fff1f2;
-    --color-christmas-red-100: #ffdfe0;
-    --color-christmas-red-200: #ffc5c7;
-    --color-christmas-red-300: #ff9da1;
-    --color-christmas-red-400: #ff646a;
-    --color-christmas-red-500: #ff3c44;
-    --color-christmas-red-600: #ed151e;
-    --color-christmas-red-700: #c80d15;
-    --color-christmas-red-800: #a50f15;
-    --color-christmas-red-900: #881419;
-    --color-christmas-red-950: #4b0407;      
+
+    --color-white-50: #fffefe;
+    --color-white-100: #fefcfc;
+    --color-white-200: #fdf9fa;
+    --color-white-300: #fcf7f7;
+    --color-white-400: #fbf4f5;
+    --color-white-500: #faf1f2;
+    --color-white-600: #c8c1c2;
+    --color-white-700: #969191;
+    --color-white-800: #646061;
+    --color-white-900: #323030;
+
+    --color-red-50: #fff1f2;
+    --color-red-100: #ffdfe0;
+    --color-red-200: #ffc5c7;
+    --color-red-300: #ff9da1;
+    --color-red-400: #ff646a;
+    --color-red-500: #ff3c44;
+    --color-red-600: #ed151e;
+    --color-red-700: #c80d15;
+    --color-red-800: #a50f15;
+    --color-red-900: #881419;
+    --color-red-950: #4b0407;
+
+    --color-beige-50: #fcf8f5;
+    --color-beige-100: #f8f2ea;
+    --color-beige-200: #f1e4d5;
+    --color-beige-300: #ebd7c1;
+    --color-beige-400: #e4c9ac;
+    --color-beige-500: #ddbc97;
+    --color-beige-600: #b19679;
+    --color-beige-700: #85715b;
+    --color-beige-800: #584b3c;
+    --color-beige-900: #2c261e;
+
+    --color-green-50: #ebf6ef;
+    --color-green-100: #d7eede;
+    --color-green-200: #afddbe;
+    --color-green-300: #88cb9d;
+    --color-green-400: #60ba7d;
+    --color-green-500: #38a95c;
+    --color-green-600: #2d874a;
+    --color-green-700: #226537;
+    --color-green-800: #164425;
+    --color-green-900: #0b2212;
 }
