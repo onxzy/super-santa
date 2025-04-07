@@ -1,0 +1,15 @@
+@import "tailwindcss";
+
+@theme {
+    --color-christmas-red-50: #fff1f2;
+    --color-christmas-red-100: #ffdfe0;
+    --color-christmas-red-200: #ffc5c7;
+    --color-christmas-red-300: #ff9da1;
+    --color-christmas-red-400: #ff646a;
+    --color-christmas-red-500: #ff3c44;
+    --color-christmas-red-600: #ed151e;
+    --color-christmas-red-700: #c80d15;
+    --color-christmas-red-800: #a50f15;
+    --color-christmas-red-900: #881419;
+    --color-christmas-red-950: #4b0407;      
+}
