@@ -1,5 +1,13 @@
 @import "tailwindcss";
 
+html {
+    font-family: var(--font-inter)
+}
+
+h1 {
+    font-family: var(--font-berkshire-swash)
+}
+
 body {
     @apply bg-white-500 text-black-500;
 }
