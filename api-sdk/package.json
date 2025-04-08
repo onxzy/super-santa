@@ -1,0 +1,21 @@
+{
+  "name": "super-santa-sdk",
+  "version": "1.0.0",
+  "description": "The API SDK to interact with the Super Santa server",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "build": "tsc",
+    "build:watch": "tsc --watch",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "onxzy",
+  "license": "ISC",
+  "devDependencies": {
+    "typescript": "^5.8.3"
+  },
+  "dependencies": {
+    "@swan-io/srp": "^0.2.6",
+    "jose": "^6.0.10"
+  }
+}
