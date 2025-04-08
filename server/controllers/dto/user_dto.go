@@ -8,3 +8,11 @@ type CreateUserRequest struct {
 	PublicKeySecret     string `json:"public_key_secret" binding:"required"`
 	PrivateKeyEncrypted string `json:"private_key_encrypted" binding:"required"`
 }
+
+type UpdateWishesRequest struct {
+	Wishes string `json:"wishes" binding:"required"`
+}
+
+type UpdateWishesResponse struct {
+	Wishes string `json:"wishes"`
+}

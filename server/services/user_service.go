@@ -29,10 +29,21 @@ func (s *UserService) GetUser(userID string) (*models.User, error) {
 	return user, nil
 }
 
-func (s *UserService) CreateUser(u *models.User) error {
-	if err := s.userStore.CreateUser(u); err != nil {
+func (s *UserService) CreateUser(user *models.User) error {
+	if err := s.userStore.CreateUser(user); err != nil {
 		if errors.Is(err, database.ErrUserAlreadyExists) {
 			return userService.ErrUserAlreadyExists
+		}
+		return err
+	}
+
+	return nil
+}
+
+func (s *UserService) UpdateUser(user *models.User) error {
+	if err := s.userStore.UpdateUser(user); err != nil {
+		if errors.Is(err, database.ErrUserNotFound) {
+			return userService.ErrUserNotFound
 		}
 		return err
 	}

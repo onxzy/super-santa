@@ -21,6 +21,7 @@ export enum AuthAPIErrorCode {
   BAD_EMAIL = "BAD_EMAIL",
   BAD_PASSWORD = "BAD_PASSWORD",
   AUTH_ERROR = "AUTH_ERROR",
+  FORBIDDEN = "FORBIDDEN",
 
   UNKNOWN_ERROR = "UNKNOWN_ERROR",
 }
@@ -32,7 +33,9 @@ export class AuthAPIError extends Error {
     message: string = "Unknown error"
   ) {
     super(
-      error instanceof Error ? `[${error.name}] ${error.message}` : message
+      error instanceof Error
+        ? `${message} : [${error.name}] ${error.message}`
+        : message
     );
     this.name = "AuthAPIError";
   }

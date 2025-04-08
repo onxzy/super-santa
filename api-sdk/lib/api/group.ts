@@ -1,18 +1,23 @@
-import { AES } from "../crypto/aes";
-import { RSA } from "../crypto/rsa";
-import { SRP } from "../crypto/srp";
-import { CryptoUtils } from "../crypto/utils";
 import { AuthAPIError, AuthAPIErrorCode } from "./auth";
 import { ApiClient, ApiError } from "./client";
 import {
   CreateGroupRequest,
+  FinishDrawRequest,
+  GroupAPIStatusCode,
   GroupInfo,
   GroupModel,
+  InitDrawResponse,
   JoinGroupRequest,
 } from "./dto/group";
+import { UpdateWishesRequest, UpdateWishesResponse } from "./dto/user";
 
 export enum GroupAPIErrorCode {
   GROUP_AUTH_ERROR = "GROUP_AUTH_ERROR",
+
+  NOT_ENOUGH_USERS = "NOT_ENOUGH_USERS",
+  DRAW_NOT_INITIED = "DRAW_NOT_INITIED",
+  DRAW_DONE = "DRAW_DONE",
+
   UNKNOWN_ERROR = "UNKNOWN_ERROR",
 }
 
@@ -23,7 +28,9 @@ export class GroupAPIError extends Error {
     message: string = "Unknown error"
   ) {
     super(
-      error instanceof Error ? `[${error.name}] ${error.message}` : message
+      error instanceof Error
+        ? `${message} : [${error.name}] ${error.message}`
+        : message
     );
     this.name = "GroupAPIError";
   }
@@ -129,6 +136,103 @@ export class GroupAPI {
         GroupAPIErrorCode.UNKNOWN_ERROR,
         error,
         "Failed to get group"
+      );
+    }
+  }
+
+  async updateWishes(wishes: string): Promise<string> {
+    try {
+      const { wishes: newWishes } = await this.client.put<
+        UpdateWishesRequest,
+        UpdateWishesResponse
+      >(`${GroupAPI.basePath}/wishes`, { wishes });
+      return newWishes;
+    } catch (error) {
+      if (error instanceof ApiError) {
+        // 400 and 404 should not occur
+        if (error.status === 401)
+          throw new AuthAPIError(AuthAPIErrorCode.AUTH_ERROR, error);
+      }
+      throw new GroupAPIError(
+        GroupAPIErrorCode.UNKNOWN_ERROR,
+        error,
+        "Failed to update wishes"
+      );
+    }
+  }
+
+  /**
+   *
+   * @throws {GroupAPIError} NOT_ENOUGH_USERS, DRAW_NOT_INITIED
+   */
+  async initDraw(): Promise<string[]> {
+    try {
+      const { public_keys_secret } = await this.client.get<InitDrawResponse>(
+        `${GroupAPI.basePath}/draw`
+      );
+      return public_keys_secret;
+    } catch (error) {
+      if (error instanceof ApiError) {
+        if (error.status === GroupAPIStatusCode.NOT_ENOUGH_USERS)
+          throw new GroupAPIError(
+            GroupAPIErrorCode.NOT_ENOUGH_USERS,
+            error,
+            "Failed to init draw"
+          );
+        if (error.status === 409)
+          throw new GroupAPIError(
+            GroupAPIErrorCode.DRAW_DONE,
+            error,
+            "Draw already done"
+          );
+        if (error.status === 401)
+          throw new AuthAPIError(AuthAPIErrorCode.AUTH_ERROR, error);
+        if (error.status === 403)
+          throw new AuthAPIError(AuthAPIErrorCode.FORBIDDEN, error);
+      }
+      throw new GroupAPIError(
+        GroupAPIErrorCode.UNKNOWN_ERROR,
+        error,
+        "Failed to init draw"
+      );
+    }
+  }
+
+  /**
+   *
+   * @throws {GroupAPIError} DRAW_NOT_INITIED, DRAW_DONE
+   */
+  async finishDraw(publicKeys: JsonWebKey[]): Promise<void> {
+    try {
+      await this.client.post<FinishDrawRequest, null>(
+        `${GroupAPI.basePath}/draw`,
+        {
+          public_keys: publicKeys.map((key) => JSON.stringify(key)),
+        }
+      );
+    } catch (error) {
+      if (error instanceof ApiError) {
+        if (error.status === GroupAPIStatusCode.DRAW_SESSION_NOT_FOUND)
+          throw new GroupAPIError(
+            GroupAPIErrorCode.DRAW_NOT_INITIED,
+            error,
+            "Draw not initied or too old. init draw again"
+          );
+        if (error.status === 409)
+          throw new GroupAPIError(
+            GroupAPIErrorCode.DRAW_DONE,
+            error,
+            "Draw already done"
+          );
+        if (error.status === 401)
+          throw new AuthAPIError(AuthAPIErrorCode.AUTH_ERROR, error);
+        if (error.status === 403)
+          throw new AuthAPIError(AuthAPIErrorCode.FORBIDDEN, error);
+      }
+      throw new GroupAPIError(
+        GroupAPIErrorCode.UNKNOWN_ERROR,
+        error,
+        "Failed to finish draw"
       );
     }
   }

@@ -16,12 +16,17 @@ export class ApiClient {
     return this.authContext;
   }
 
-  async fetch<Res>(endpoint: string, options: RequestInit = {}): Promise<Res> {
+  async fetch<Res = null>(
+    endpoint: string,
+    options: RequestInit = {}
+  ): Promise<Res> {
     const response = await fetch(`${this.baseUrl}${endpoint}`, {
       ...options,
       headers: {
         Accept: "application/json",
-        Authorization: this.authContext.getAuthHeader(),
+        ...(this.authContext.getAuthHeader() && {
+          Authorization: this.authContext.getAuthHeader(),
+        }),
         ...(options.headers || {}),
       },
     });
@@ -30,7 +35,11 @@ export class ApiClient {
       throw new ApiError(response.status, response.statusText);
     }
 
-    return response.json();
+    try {
+      return await response.json();
+    } catch (error) {
+      return null as Res;
+    }
   }
 
   async get<Res>(endpoint: string, headers: HeadersInit = {}): Promise<Res> {
@@ -47,6 +56,21 @@ export class ApiClient {
   ): Promise<Res> {
     return this.fetch<Res>(endpoint, {
       method: "POST",
+      body: JSON.stringify(body),
+      headers: {
+        ...headers,
+        "Content-Type": "application/json",
+      },
+    });
+  }
+
+  async put<Req, Res>(
+    endpoint: string,
+    body: Req,
+    headers: HeadersInit = {}
+  ): Promise<Res> {
+    return this.fetch<Res>(endpoint, {
+      method: "PUT",
       body: JSON.stringify(body),
       headers: {
         ...headers,

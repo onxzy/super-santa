@@ -1,3 +1,4 @@
+import { compactDecrypt } from "jose";
 import { AES } from "./crypto/aes";
 import { RSA } from "./crypto/rsa";
 import { SRP } from "./crypto/srp";
@@ -8,6 +9,9 @@ export enum CryptoContextErrorCode {
   MISSING_SECRET_KEY = "MISSING_SECRET_KEY",
   INCOMPLETE = "INCOMPLETE",
   NOT_FOUND = "NOT_FOUND",
+
+  INVALID_PUBLIC_KEY = "INVALID_PUBLIC_KEY",
+
   UNKNOWN_ERROR = "UNKNOWN_ERROR",
 }
 
@@ -23,6 +27,8 @@ export class CryptoContext {
 
   private secretKey: CryptoKey | null = null;
   private privateKey: CryptoKey | null = null;
+
+  private textDecoder = new TextDecoder();
 
   constructor(
     private cryptoUtils: CryptoUtils,
@@ -107,14 +113,8 @@ export class CryptoContext {
       throw new CryptoContextError(CryptoContextErrorCode.INCOMPLETE);
     }
 
-    await Promise.all([
-      async () => {
-        this.secretKey = await this.aes.importKey(secretKey);
-      },
-      async () => {
-        this.privateKey = await this.rsa.importKey(privateKey, true);
-      },
-    ]);
+    this.secretKey = await this.aes.importKey(secretKey);
+    this.privateKey = await this.rsa.importKey(privateKey, true);
 
     return this;
   }
@@ -209,5 +209,49 @@ export class CryptoContext {
         ivPrivateKey
       ),
     };
+  }
+
+  /**
+   * Decrypt the public key using the secret key.
+   * @throws {CryptoContextError} MISSING_SECRET_KEY, INVALID_PUBLIC_KEY (The decrypted public key was not valid)
+   * @throws {CryptoError} UNWRAP_FAILED (The public key was probably not wrapped with this secret key)
+   */
+  async decryptPublicKey(publicKeySecretEncoded: string): Promise<JsonWebKey> {
+    if (!this.secretKey) {
+      throw new CryptoContextError(CryptoContextErrorCode.MISSING_SECRET_KEY);
+    }
+
+    const { wrappedKey, iv } = this.cryptoUtils.Base64ToWrapped(
+      publicKeySecretEncoded
+    );
+
+    const publicKey = await this.rsa.unwrapKey(wrappedKey, this.secretKey, iv);
+
+    if (
+      publicKey.type !== "public" ||
+      publicKey.algorithm.name !== "RSA-OAEP"
+    ) {
+      throw new CryptoContextError(CryptoContextErrorCode.INVALID_PUBLIC_KEY);
+    }
+
+    return await this.rsa.exportKey(publicKey);
+  }
+
+  /**
+   * Decrypt the result using the private key.
+   * @throws {CryptoContextError} INCOMPLETE
+   * @returns {string | null} The decrypted result or null if the decryption failed
+   */
+  async decryptResult(result: string): Promise<string | null> {
+    if (!this.privateKey) {
+      throw new CryptoContextError(CryptoContextErrorCode.INCOMPLETE);
+    }
+
+    try {
+      const { plaintext } = await compactDecrypt(result, this.privateKey);
+      return this.textDecoder.decode(plaintext);
+    } catch (error) {
+      return null;
+    }
   }
 }

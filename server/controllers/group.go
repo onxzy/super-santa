@@ -30,8 +30,11 @@ func (gc *GroupController) RegisterRoutes(router *gin.RouterGroup, authMiddlewar
 	router.GET("/info/:group_id", gc.GetGroupInfo)
 	router.POST("/join", gc.JoinGroup)
 
-	authRouter := router.Group("/").Use(authMiddleware.Auth)
+	authRouter := router.Group("").Use(authMiddleware.Auth)
 	authRouter.GET("", gc.GetGroup)
+	authRouter.PUT("/wishes", gc.UpdateWishes)
+	authRouter.GET("/draw", gc.InitDraw)
+	authRouter.POST("/draw", gc.FinishDraw)
 }
 
 // Create Group
@@ -49,7 +52,7 @@ func (gc *GroupController) CreateGroup(c *gin.Context) {
 	group := &models.Group{
 		Name:           req.Name,
 		SecretVerifier: req.SecretVerifier,
-		Results:        "",
+		Results:        nil,
 	}
 
 	admin := &models.User{
@@ -62,7 +65,7 @@ func (gc *GroupController) CreateGroup(c *gin.Context) {
 	}
 
 	if err := gc.groupService.CreateGroup(group, admin); err != nil {
-		// FIXME: Handle error properly
+		// TODO: Add error handling
 		c.JSON(500, gin.H{"error": err.Error()})
 		return
 	}
@@ -111,7 +114,6 @@ func (gc *GroupController) JoinGroup(c *gin.Context) {
 		return
 	}
 
-	// FIXME: Get groupID
 	groupID, err := gc.authService.VerifyGroupJWT(req.GroupToken)
 	if err != nil {
 		c.JSON(401, gin.H{"error": "Unauthorized"})
@@ -154,5 +156,110 @@ func (gc *GroupController) JoinGroup(c *gin.Context) {
 }
 
 func (gc *GroupController) UpdateWishes(c *gin.Context) {
+	claims := c.MustGet("claims").(*authService.AuthClaims)
+	userID := claims.Subject
 
+	var req dto.UpdateWishesRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(400, gin.H{"error": err.Error()})
+		return
+	}
+
+	// Get user from service
+	user, err := gc.userService.GetUser(userID)
+	if err != nil {
+		if err == userService.ErrUserNotFound {
+			c.JSON(404, gin.H{"error": "User not found"})
+			return
+		}
+		c.JSON(500, gin.H{"error": err.Error()})
+		return
+	}
+
+	// Update user
+	user.Wishes = req.Wishes
+	if err := gc.userService.UpdateUser(user); err != nil {
+		c.JSON(500, gin.H{"error": err.Error()})
+		return
+	}
+
+	c.JSON(200, &dto.UpdateWishesResponse{
+		Wishes: user.Wishes,
+	})
+}
+
+// TODO: Add error handling
+func (gc *GroupController) InitDraw(c *gin.Context) {
+	claims := c.MustGet("claims").(*authService.AuthClaims)
+	groupID := claims.GroupID
+
+	if !claims.IsAdmin {
+		c.JSON(403, gin.H{"error": "Forbidden"})
+		return
+	}
+
+	// Get group from service
+	group, err := gc.groupService.GetGroup(groupID)
+	if err != nil {
+		if err == groupService.ErrGroupNotFound {
+			c.JSON(404, gin.H{"error": "Group not found"})
+			return
+		}
+		c.JSON(500, gin.H{"error": err.Error()})
+		return
+	}
+
+	if group.Results != nil {
+		c.JSON(409, gin.H{"error": "Draw already done"})
+		return
+	}
+
+	publicKeys, err := gc.groupService.InitDraw(groupID)
+	if err != nil {
+		c.JSON(500, gin.H{"error": err.Error()})
+		return
+	}
+
+	c.JSON(200, &dto.InitDrawResponse{
+		PublicKeysSecret: publicKeys,
+	})
+}
+
+// TODO: Add error handling
+func (gc *GroupController) FinishDraw(c *gin.Context) {
+	claims := c.MustGet("claims").(*authService.AuthClaims)
+	groupID := claims.GroupID
+
+	if !claims.IsAdmin {
+		c.JSON(403, gin.H{"error": "Forbidden"})
+		return
+	}
+
+	group, err := gc.groupService.GetGroup(groupID)
+	if err != nil {
+		if err == groupService.ErrGroupNotFound {
+			c.JSON(404, gin.H{"error": "Group not found"})
+			return
+		}
+		c.JSON(500, gin.H{"error": err.Error()})
+		return
+	}
+
+	if group.Results != nil {
+		c.JSON(409, gin.H{"error": "Draw already done"})
+		return
+	}
+
+	var req dto.FinishDrawRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(400, gin.H{"error": err.Error()})
+		return
+	}
+
+	if _, err := gc.groupService.FinishDraw(groupID, req.PublicKeys); err != nil {
+		c.JSON(500, gin.H{"error": err.Error()})
+		return
+	}
+
+	c.Status(200)
 }

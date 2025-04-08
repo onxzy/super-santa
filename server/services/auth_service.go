@@ -1,6 +1,7 @@
 package services
 
 import (
+	"crypto/rand"
 	"crypto/sha256"
 	"encoding/hex"
 	"errors"
@@ -255,12 +256,16 @@ func (a *AuthService) CompleteLogin(sessionType authService.LoginSessionType, se
 	}, nil
 }
 
-// FIXME: Use a cryptographically secure random generator
 func generateSessionID(prefix authService.LoginSessionType, ID string) string {
-	h := sha256.New()
-	h.Write([]byte(ID))
-	h.Write([]byte(time.Now().String()))
-	hash := h.Sum(nil)
+	// Generate 32 random bytes (256 bits of entropy)
+	randomBytes := make([]byte, 32)
+	if _, err := rand.Read(randomBytes); err != nil {
+		// Fall back to less secure method if secure random fails
+		h := sha256.New()
+		h.Write([]byte(ID))
+		h.Write([]byte(time.Now().String()))
+		randomBytes = h.Sum(nil)
+	}
 
-	return string(prefix) + "-" + hex.EncodeToString(hash)
+	return string(prefix) + "-" + hex.EncodeToString(randomBytes)
 }

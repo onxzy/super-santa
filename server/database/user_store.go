@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"onxzy/super-santa-server/database/models"
+	"strings"
 
 	"go.uber.org/fx"
 	"gorm.io/gorm"
@@ -38,6 +39,9 @@ func NewUserStore(lc fx.Lifecycle, db *DB) *UserStore {
 func (s *UserStore) CreateUser(user *models.User) error {
 	if err := s.db.gorm.Create(user).Error; err != nil {
 		if errors.Is(err, gorm.ErrDuplicatedKey) {
+			return ErrUserAlreadyExists
+		}
+		if strings.Contains(err.Error(), "UNIQUE constraint") {
 			return ErrUserAlreadyExists
 		}
 		if errors.Is(err, gorm.ErrRecordNotFound) {

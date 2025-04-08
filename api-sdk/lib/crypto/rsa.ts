@@ -6,7 +6,7 @@ export class RSA {
       {
         name: "RSA-OAEP",
         modulusLength: 2048,
-        publicExponent: new Uint8Array([1, 0, 1]), // FIXME: Use a better exponent
+        publicExponent: new Uint8Array([1, 0, 1]), // 65537
         hash: "SHA-256",
       },
       true,
@@ -64,10 +64,9 @@ export class RSA {
     }
   }
 
-  async exportKey(key: CryptoKey): Promise<string> {
+  async exportKey(key: CryptoKey): Promise<JsonWebKey> {
     try {
-      const jwk = await crypto.subtle.exportKey("jwk", key);
-      return JSON.stringify(jwk);
+      return await crypto.subtle.exportKey("jwk", key);
     } catch (error) {
       throw new CryptoError(
         CryptoErrorCode.EXPORT_FAILED,
@@ -77,11 +76,11 @@ export class RSA {
     }
   }
 
-  async importKey(key: string, privateKey = false): Promise<CryptoKey> {
+  async importKey(key: JsonWebKey, privateKey = false): Promise<CryptoKey> {
     try {
       return await crypto.subtle.importKey(
         "jwk",
-        JSON.parse(key),
+        key,
         {
           name: "RSA-OAEP",
           hash: "SHA-256",

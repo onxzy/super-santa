@@ -15,6 +15,7 @@
     "typescript": "^5.8.3"
   },
   "dependencies": {
-    "@swan-io/srp": "^0.2.6"
+    "@swan-io/srp": "^0.2.6",
+    "jose": "^6.0.10"
   }
 }

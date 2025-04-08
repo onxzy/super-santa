@@ -1,17 +1,24 @@
-import { AuthAPI, AuthAPIError } from "./api/auth";
+import { AuthAPI } from "./api/auth";
 import { ApiClient } from "./api/client";
 import { SRP } from "./crypto/srp";
 import { AES } from "./crypto/aes";
 import { RSA } from "./crypto/rsa";
 import { GroupAPI } from "./api/group";
 import { CryptoUtils } from "./crypto/utils";
-import { UserSelf } from "./api/dto/user";
-import { CryptoContext } from "./crypto_context";
+import { User, UserSelf } from "./api/dto/user";
+import {
+  CryptoContext,
+  CryptoContextError,
+  CryptoContextErrorCode,
+} from "./crypto_context";
 import { AuthContext } from "./api/auth_context";
 import { GroupModel } from "./api/dto/group";
+import { CryptoError, CryptoErrorCode } from "./crypto/errors";
 
 export enum SuperSantaAPIErrorCode {
   BAD_CRYPTO_CONTEXT = "BAD_CRYPTO_CONTEXT",
+  BAD_DRAW = "BAD_DRAW",
+  BAD_RESULT = "BAD_RESULT",
   UNKNOWN_ERROR = "UNKNOWN_ERROR",
 }
 
@@ -22,7 +29,9 @@ export class SuperSantaAPIError extends Error {
     message: string = "Unknown error"
   ) {
     super(
-      error instanceof Error ? `[${error.name}] ${error.message}` : message
+      error instanceof Error
+        ? `${message} : [${error.name}] ${error.message}`
+        : message
     );
     this.name = "SuperSantaAPIError";
   }
@@ -72,7 +81,7 @@ export class SuperSantaAPI {
    *
    * **This will login the user**
    *
-   * @throws {SuperSantaAPIError} BAD_CRYPTO_CONTEXT, UNKNOWN_ERROR
+   * @throws {SuperSantaAPIError} BAD_CRYPTO_CONTEXT
    */
   async createGroup(
     name: string,
@@ -125,7 +134,7 @@ export class SuperSantaAPI {
    * **You must call this before loginUser and joinGroup.**
    * This can be used to check the group secret before prompting the user for their email and password or allowing them to join the group.
    *
-   * @throws {AuthAPIError} BAD_GROUP_ID, BAD_SECRET, GROUP_AUTH_ERROR, UNKNOWN_ERROR
+   * @throws {AuthAPIError} BAD_GROUP_ID, BAD_SECRET, GROUP_AUTH_ERROR
    */
   async loginGroup(groupId: string, secret: string) {
     const { secretKey } = await this.authAPI.getGroupToken(groupId, secret);
@@ -136,7 +145,7 @@ export class SuperSantaAPI {
    * Login to user using email and password. **You must call loginGroup first.**
    *
    * @throws {SuperSantaAPIError} BAD_CRYPTO_CONTEXT
-   * @throws {AuthAPIError} BAD_EMAIL, BAD_PASSWORD, AUTH_ERROR, UNKNOWN_ERROR
+   * @throws {AuthAPIError} BAD_EMAIL, BAD_PASSWORD, AUTH_ERROR
    */
   async loginUser(email: string, password: string): Promise<UserSelf | null> {
     if (!this.cryptoContext.hasSecretKey()) {
@@ -195,7 +204,7 @@ export class SuperSantaAPI {
   /**
    * Get user
    *
-   * @throws {AuthAPIError} AUTH_ERROR, UNKNOWN_ERROR
+   * @throws {AuthAPIError} AUTH_ERROR
    */
   getUser() {
     return this.authAPI.getUser();
@@ -205,7 +214,6 @@ export class SuperSantaAPI {
    * Get group
    *
    * @throws {AuthAPIError} AUTH_ERROR
-   * @throws {GroupAPIError} UNKNOWN_ERROR
    */
   getGroup() {
     return this.groupAPI.getGroup();
@@ -214,7 +222,6 @@ export class SuperSantaAPI {
   /**
    * Get group info, useful to display group name before login.
    *
-   * @throws {GroupAPIError} UNKNOWN_ERROR
    * @returns GroupInfo or null if group not found
    */
   getGroupInfo(id: string) {
@@ -226,7 +233,7 @@ export class SuperSantaAPI {
    *
    * **You must call loginGroup first.**
    *
-   * @throws {SuperSantaAPIError} BAD_CRYPTO_CONTEXT, UNKNOWN_ERROR
+   * @throws {SuperSantaAPIError} BAD_CRYPTO_CONTEXT
    */
   async joinGroup(
     username: string,
@@ -270,8 +277,124 @@ export class SuperSantaAPI {
     return { group, user };
   }
 
+  /**
+   * Update user wishes.
+   *
+   * @throws {AuthAPIError} AUTH_ERROR
+   */
+  async updateWishes(wishes: string) {
+    return await this.groupAPI.updateWishes(wishes);
+  }
+
+  /**
+   * Draw the secret santa.
+   *
+   * @throws {AuthAPIError} AUTH_ERROR, FORBIDDEN
+   * @throws {GroupAPIError} NOT_ENOUGH_USERS, DRAW_ALREADY_DONE
+   * @throws {SuperSantaAPIError} BAD_CRYPTO_CONTEXT, BAD_DRAW (One of the public keys was not valid)
+   */
+  async draw() {
+    if (!this.cryptoContext.hasSecretKey()) {
+      throw new SuperSantaAPIError(
+        SuperSantaAPIErrorCode.BAD_CRYPTO_CONTEXT,
+        null,
+        "Secret key missing, are you logged in ?"
+      );
+    }
+
+    const publicKeysSecret = await this.groupAPI.initDraw();
+
+    let publicKeys;
+    try {
+      publicKeys = await Promise.all(
+        publicKeysSecret.map((key) => this.cryptoContext.decryptPublicKey(key))
+      );
+    } catch (error) {
+      if (
+        error instanceof CryptoError &&
+        error.code === CryptoErrorCode.UNWRAP_FAILED
+      ) {
+        throw new SuperSantaAPIError(
+          SuperSantaAPIErrorCode.BAD_DRAW,
+          error,
+          "Failed to unwrap public keys"
+        );
+      }
+      if (
+        error instanceof CryptoContextError &&
+        error.code === CryptoContextErrorCode.INVALID_PUBLIC_KEY
+      ) {
+        throw new SuperSantaAPIError(
+          SuperSantaAPIErrorCode.BAD_DRAW,
+          error,
+          "Unwrapped public key was not valid"
+        );
+      }
+      throw new SuperSantaAPIError(
+        SuperSantaAPIErrorCode.UNKNOWN_ERROR,
+        error,
+        "Failed to decrypt public keys"
+      );
+    }
+
+    // Generate a random shift amount (less than the array length)
+    const shiftAmount =
+      Math.floor(Math.random() * (publicKeysSecret.length - 1)) + 1;
+
+    // Rotate the array by shiftAmount positions
+    // This creates a mapping where each person gives a gift to someone else
+    const shiftedPublicKeys = [
+      ...publicKeys.slice(shiftAmount),
+      ...publicKeys.slice(0, shiftAmount),
+    ];
+
+    await this.groupAPI.finishDraw(shiftedPublicKeys);
+
+    const group = await this.groupAPI.getGroup();
+    const user = await this.parseResult(group);
+
+    console.log(user);
+  }
+
+  /**
+   * Parse the result of the draw.
+   *
+   * @throws {SuperSantaAPIError} BAD_CRYPTO_CONTEXT, BAD_RESULT
+   * @returns User or null if no result yet
+   */
+  async parseResult(group: GroupModel): Promise<User | null> {
+    if (!this.cryptoContext.isComplete()) {
+      throw new SuperSantaAPIError(
+        SuperSantaAPIErrorCode.BAD_CRYPTO_CONTEXT,
+        null,
+        "Crypto context is not complete, are you logged in ?"
+      );
+    }
+
+    if (!group.results || group.results.length === 0) {
+      return null;
+    }
+
+    let userID = null;
+
+    for (const result of group.results) {
+      userID = await this.cryptoContext.decryptResult(result);
+      if (userID) break;
+    }
+
+    if (userID) {
+      const user = group.users.find((user) => user.id === userID);
+      if (user) return user;
+    }
+
+    throw new SuperSantaAPIError(
+      SuperSantaAPIErrorCode.BAD_RESULT,
+      null,
+      "Failed to parse result, you are alone !"
+    );
+  }
+
   // TODO:
   // leaveGroup
-  // putWishes
-  // draw
+  // removeUser
 }

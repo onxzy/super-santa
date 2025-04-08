@@ -47,6 +47,11 @@ func (s *GroupStore) GetGroup(id string) (*models.Group, error) {
 	return &group, nil
 }
 
+func (s *GroupStore) UpdateGroup(group *models.Group) error {
+	group.Users = nil // Clear the Users field to avoid updating it
+	return s.db.gorm.Save(group).Error
+}
+
 func (s *GroupStore) DeleteGroup(id string) error {
 	return s.db.gorm.Delete(&models.Group{}, id).Error
 }

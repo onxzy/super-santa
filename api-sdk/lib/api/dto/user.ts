@@ -6,6 +6,14 @@ export interface CreateUserRequest {
   private_key_encrypted: string;
 }
 
+export interface UpdateWishesRequest {
+  wishes: string;
+}
+
+export interface UpdateWishesResponse {
+  wishes: string;
+}
+
 export interface User {
   id: string;
   username: string;

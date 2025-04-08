@@ -16,7 +16,7 @@ export class CryptoError extends Error {
   constructor(public code: CryptoErrorCode, error: unknown, message: string) {
     super(
       error instanceof Error
-        ? `[${error.name}] ${error.message}`
+        ? `${message} : [${error.name}] ${error.message}`
         : message || "Unknown error"
     );
     this.name = "CryptoError";

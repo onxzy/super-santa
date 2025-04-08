@@ -18,3 +18,11 @@ type JoinGroupRequest struct {
 }
 
 type JoinGroupResponse = models.Group
+
+type InitDrawResponse struct {
+	PublicKeysSecret []string `json:"public_keys_secret"`
+}
+
+type FinishDrawRequest struct {
+	PublicKeys []string `json:"public_keys" binding:"required"`
+}
