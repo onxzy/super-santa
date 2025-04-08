@@ -1,0 +1,11 @@
+auth:
+  jwt:
+    secret: "your-secret-key-here"
+    expire: 86400  # 24 hours in seconds
+    expire_group: 86400    # 24 hours in seconds
+
+log:
+  level: "debug"  # Available levels: debug, info, warn, error, fatal, panic
+
+db:
+  sqlitepath: "./data.db"
