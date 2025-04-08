@@ -1,7 +1,7 @@
 package dto
 
 import (
-	"onxzy/super-santa-server/services/auth"
+	"onxzy/super-santa-server/services/authService"
 	"time"
 )
 
@@ -31,8 +31,8 @@ type GetGroupAuthResponse struct {
 }
 
 type GetGroupChallengeResponse struct {
-	SessionID string            `json:"session_id"`
-	Challenge auth.SrpChallenge `json:"group_challenge"`
+	SessionID string                   `json:"session_id"`
+	Challenge authService.SrpChallenge `json:"group_challenge"`
 }
 
 type GroupLoginRequest struct {
@@ -54,8 +54,8 @@ type GetLoginChallengeRequest struct {
 }
 
 type GetLoginChallengeResponse struct {
-	SessionID string            `json:"session_id"`
-	Challenge auth.SrpChallenge `json:"user_challenge"`
+	SessionID string                   `json:"session_id"`
+	Challenge authService.SrpChallenge `json:"user_challenge"`
 }
 
 type LoginRequest struct {

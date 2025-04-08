@@ -1,4 +1,4 @@
-package group
+package groupService
 
 type GroupInfo struct {
 	ID   string `json:"id"`

@@ -4,7 +4,7 @@ import (
 	"errors"
 	"onxzy/super-santa-server/database"
 	"onxzy/super-santa-server/database/models"
-	"onxzy/super-santa-server/services/group"
+	"onxzy/super-santa-server/services/groupService"
 	"strings"
 )
 
@@ -31,28 +31,28 @@ func (s *GroupService) CreateGroup(group *models.Group, admin *models.User) erro
 }
 
 func (s *GroupService) GetGroup(groupID string) (*models.Group, error) {
-	g, err := s.groupStore.GetGroup(groupID)
+	group, err := s.groupStore.GetGroup(groupID)
 	if err != nil {
 		if errors.Is(err, database.ErrGroupNotFound) {
-			return nil, group.ErrGroupNotFound
+			return nil, groupService.ErrGroupNotFound
 		}
 		return nil, err
 	}
 
-	return g, nil
+	return group, nil
 }
 
-func (s *GroupService) GetGroupInfo(groupID string) (*group.GroupInfo, error) {
-	g, err := s.groupStore.GetGroup(groupID)
+func (s *GroupService) GetGroupInfo(groupID string) (*groupService.GroupInfo, error) {
+	group, err := s.groupStore.GetGroup(groupID)
 	if err != nil {
 		if errors.Is(err, database.ErrGroupNotFound) {
-			return nil, group.ErrGroupNotFound
+			return nil, groupService.ErrGroupNotFound
 		}
 		return nil, err
 	}
 
-	return &group.GroupInfo{
-		ID:   g.ID,
-		Name: g.Name,
+	return &groupService.GroupInfo{
+		ID:   group.ID,
+		Name: group.Name,
 	}, nil
 }

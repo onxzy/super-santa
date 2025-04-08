@@ -5,9 +5,9 @@ import (
 	"onxzy/super-santa-server/controllers/dto"
 	"onxzy/super-santa-server/middlewares"
 	"onxzy/super-santa-server/services"
-	"onxzy/super-santa-server/services/auth"
-	"onxzy/super-santa-server/services/group"
-	"onxzy/super-santa-server/services/user"
+	"onxzy/super-santa-server/services/authService"
+	"onxzy/super-santa-server/services/groupService"
+	"onxzy/super-santa-server/services/userService"
 	"onxzy/super-santa-server/utils"
 
 	"github.com/gin-gonic/gin"
@@ -41,10 +41,10 @@ func (ac *AuthController) RegisterRoutes(router *gin.RouterGroup, authMiddleware
 
 // GetUser
 func (ac *AuthController) GetUser(c *gin.Context) {
-	claims := c.MustGet("claims").(*auth.AuthClaims)
+	claims := c.MustGet("claims").(*authService.AuthClaims)
 	u, err := ac.userService.GetUser(claims.Subject)
 	if err != nil {
-		if errors.Is(err, user.ErrUserNotFound) {
+		if errors.Is(err, userService.ErrUserNotFound) {
 			c.JSON(404, gin.H{"error": err.Error()})
 			return
 		}
@@ -100,7 +100,7 @@ func (ac *AuthController) GetGroupChallenge(c *gin.Context) {
 
 	sessionID, groupChallenge, err := ac.authService.InitiateGroupLogin(groupID)
 	if err != nil {
-		if errors.Is(err, group.ErrGroupNotFound) {
+		if errors.Is(err, groupService.ErrGroupNotFound) {
 			c.JSON(404, gin.H{"error": err.Error()})
 			return
 		}
@@ -124,19 +124,19 @@ func (ac *AuthController) PostGroupLogin(c *gin.Context) {
 		return
 	}
 
-	groupAuth := &auth.SrpAuth{
+	groupAuth := &authService.SrpAuth{
 		ClientPubKey: req.GroupAuth.ClientPubKey,
 		ClientAuth:   req.GroupAuth.ClientAuth,
 	}
 
-	groupID, session, err := ac.authService.CompleteLogin(auth.LoginSessionTypeGroup, req.SessionID, groupAuth)
+	groupID, session, err := ac.authService.CompleteLogin(authService.LoginSessionTypeGroup, req.SessionID, groupAuth)
 	if err != nil {
-		var invalidSession *auth.InvalidSessionError
+		var invalidSession *authService.InvalidSessionError
 		if errors.As(err, &invalidSession) {
 			c.JSON(401, gin.H{"error": "Unauthorized", "details": invalidSession.Error()})
 			return
 		}
-		if errors.Is(err, auth.ErrSrpAuthenticator) {
+		if errors.Is(err, authService.ErrSrpAuthenticator) {
 			c.JSON(403, gin.H{"error": "Forbidden"})
 			return
 		}
@@ -147,7 +147,7 @@ func (ac *AuthController) PostGroupLogin(c *gin.Context) {
 
 	token, err := ac.authService.CreateGroupJWT(groupID)
 	if err != nil {
-		if errors.Is(err, group.ErrGroupNotFound) {
+		if errors.Is(err, groupService.ErrGroupNotFound) {
 			c.JSON(404, gin.H{"error": err.Error()})
 			return
 		}
@@ -180,7 +180,7 @@ func (ac *AuthController) GetLoginChallenge(c *gin.Context) {
 
 	sessionID, challenge, err := ac.authService.InitiateUserLogin(groupID, req.Email)
 	if err != nil {
-		if errors.Is(err, user.ErrUserNotFound) {
+		if errors.Is(err, userService.ErrUserNotFound) {
 			c.JSON(404, gin.H{"error": err.Error()})
 			return
 		}
@@ -205,19 +205,19 @@ func (ac *AuthController) PostUserLogin(c *gin.Context) {
 		return
 	}
 
-	userAuth := &auth.SrpAuth{
+	userAuth := &authService.SrpAuth{
 		ClientPubKey: req.UserAuth.ClientPubKey,
 		ClientAuth:   req.UserAuth.ClientAuth,
 	}
 
-	userID, session, err := ac.authService.CompleteLogin(auth.LoginSessionTypeUser, req.SessionID, userAuth)
+	userID, session, err := ac.authService.CompleteLogin(authService.LoginSessionTypeUser, req.SessionID, userAuth)
 	if err != nil {
-		var invalidSession *auth.InvalidSessionError
+		var invalidSession *authService.InvalidSessionError
 		if errors.As(err, &invalidSession) {
 			c.JSON(401, gin.H{"error": "Unauthorized", "details": invalidSession.Error()})
 			return
 		}
-		if errors.Is(err, auth.ErrSrpAuthenticator) {
+		if errors.Is(err, authService.ErrSrpAuthenticator) {
 			c.JSON(403, gin.H{"error": "Forbidden"})
 			return
 		}
@@ -228,7 +228,7 @@ func (ac *AuthController) PostUserLogin(c *gin.Context) {
 
 	token, err := ac.authService.CreateAuthJWT(userID)
 	if err != nil {
-		if errors.Is(err, user.ErrUserNotFound) {
+		if errors.Is(err, userService.ErrUserNotFound) {
 			c.JSON(404, gin.H{"error": err.Error()})
 			return
 		}

@@ -4,6 +4,9 @@ auth:
     expire: 86400  # 24 hours in seconds
     expire_group: 86400    # 24 hours in seconds
 
+cors:
+  allow_origins: ["*"]  # Allowed origins for CORS
+
 log:
   level: "debug"  # Available levels: debug, info, warn, error, fatal, panic
 

@@ -8,6 +8,10 @@ import (
 type Config struct {
 	v *viper.Viper
 
+	Cors struct {
+		AllowOrigins []string `mapstructure:"allow_origins"`
+	} `mapstructure:"cors"`
+
 	Auth struct {
 		JWT struct {
 			Secret      string `mapstructure:"secret"`

@@ -4,27 +4,38 @@ import (
 	"errors"
 	"onxzy/super-santa-server/database"
 	"onxzy/super-santa-server/database/models"
-	"onxzy/super-santa-server/services/user"
+	"onxzy/super-santa-server/services/userService"
 )
 
 type UserService struct {
-	groupStore *database.GroupStore
+	userStore *database.UserStore
 }
 
-func NewUserService(groupStore *database.GroupStore) *UserService {
+func NewUserService(userStore *database.UserStore) *UserService {
 	return &UserService{
-		groupStore: groupStore,
+		userStore: userStore,
 	}
 }
 
 func (s *UserService) GetUser(userID string) (*models.User, error) {
-	u, err := s.groupStore.GetUser(userID)
+	user, err := s.userStore.GetUser(userID)
 	if err != nil {
 		if errors.Is(err, database.ErrUserNotFound) {
-			return nil, user.ErrUserNotFound
+			return nil, userService.ErrUserNotFound
 		}
 		return nil, err
 	}
 
-	return u, nil
+	return user, nil
+}
+
+func (s *UserService) CreateUser(u *models.User) error {
+	if err := s.userStore.CreateUser(u); err != nil {
+		if errors.Is(err, database.ErrUserAlreadyExists) {
+			return userService.ErrUserAlreadyExists
+		}
+		return err
+	}
+
+	return nil
 }

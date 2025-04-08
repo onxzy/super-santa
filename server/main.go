@@ -11,6 +11,7 @@ import (
 	"onxzy/super-santa-server/utils"
 	"time"
 
+	"github.com/gin-contrib/cors"
 	ginzap "github.com/gin-contrib/zap"
 	"github.com/gin-gonic/gin"
 	"github.com/go-playground/validator/v10"
@@ -25,7 +26,8 @@ func main() {
 			utils.InitZap,
 			utils.InitConfig,
 			database.NewDB,
-			database.NewRoomStore,
+			database.NewGroupStore,
+			database.NewUserStore,
 			services.NewGroupService,
 			services.NewUserService,
 			services.NewAuthService,
@@ -45,6 +47,7 @@ func main() {
 
 func server(
 	lc fx.Lifecycle,
+	config *utils.Config,
 	authController *controllers.AuthController,
 	authMiddleware *middlewares.AuthMiddleware,
 	groupController *controllers.GroupController,
@@ -54,6 +57,13 @@ func server(
 	log = log.Named("gin")
 
 	router := gin.New()
+
+	corsConfig := cors.DefaultConfig()
+	corsConfig.AllowOrigins = config.Cors.AllowOrigins
+	corsConfig.AddAllowHeaders("Authorization")
+
+	router.Use(cors.New(corsConfig))
+
 	router.Use(ginzap.Ginzap(log, time.RFC3339, true))
 	router.Use(ginzap.RecoveryWithZap(log, true))
 

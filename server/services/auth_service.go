@@ -5,9 +5,9 @@ import (
 	"encoding/hex"
 	"errors"
 	"onxzy/super-santa-server/database"
-	"onxzy/super-santa-server/services/auth"
-	"onxzy/super-santa-server/services/group"
-	"onxzy/super-santa-server/services/user"
+	"onxzy/super-santa-server/services/authService"
+	"onxzy/super-santa-server/services/groupService"
+	"onxzy/super-santa-server/services/userService"
 	"onxzy/super-santa-server/utils"
 	"strings"
 	"time"
@@ -18,39 +18,41 @@ import (
 
 type AuthService struct {
 	srp               *srp.SRP
-	loginSessionStore map[string]auth.LoginSession
+	loginSessionStore map[string]authService.LoginSession
 
 	config     *utils.Config
 	groupStore *database.GroupStore
+	userStore  *database.UserStore
 }
 
-func NewAuthService(config *utils.Config, groupStore *database.GroupStore) *AuthService {
+func NewAuthService(config *utils.Config, groupStore *database.GroupStore, userStore *database.UserStore) *AuthService {
 	srpInstance, _ := srp.NewSRP("rfc5054.2048", sha256.New, nil)
 	return &AuthService{
 		srp:               srpInstance,
 		config:            config,
 		groupStore:        groupStore,
-		loginSessionStore: make(map[string]auth.LoginSession),
+		userStore:         userStore,
+		loginSessionStore: make(map[string]authService.LoginSession),
 	}
 }
 
 func (a *AuthService) CreateGroupJWT(groupID string) (string, error) {
-	g, err := a.groupStore.GetGroup(groupID)
+	group, err := a.groupStore.GetGroup(groupID)
 	if err != nil {
 		if errors.Is(err, database.ErrGroupNotFound) {
-			return "", group.ErrGroupNotFound
+			return "", groupService.ErrGroupNotFound
 		}
 		return "", err
 	}
 
-	claims := auth.GroupClaims{
+	claims := authService.GroupClaims{
 		RegisteredClaims: jwt.RegisteredClaims{
 			Issuer:    "super-santa",
 			Subject:   "guest",
 			IssuedAt:  jwt.NewNumericDate(time.Now()),
 			ExpiresAt: jwt.NewNumericDate(time.Now().Add(time.Duration(a.config.Auth.JWT.GroupExpire) * time.Second)),
 		},
-		GroupID: g.ID,
+		GroupID: group.ID,
 	}
 
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
@@ -62,61 +64,61 @@ func (a *AuthService) CreateGroupJWT(groupID string) (string, error) {
 }
 
 func (a *AuthService) VerifyGroupJWT(tokenString string) (groupID string, err error) {
-	claims := &auth.GroupClaims{}
+	claims := &authService.GroupClaims{}
 	token, err := jwt.ParseWithClaims(tokenString, claims, func(token *jwt.Token) (any, error) {
 		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
-			return nil, &auth.InvalidTokenError{Err: errors.New("unexpected signing method")}
+			return nil, &authService.InvalidTokenError{Err: errors.New("unexpected signing method")}
 		}
 		return []byte(a.config.Auth.JWT.Secret), nil
 	})
 	if err != nil {
-		return "", &auth.InvalidTokenError{Err: err}
+		return "", &authService.InvalidTokenError{Err: err}
 	}
 	if !token.Valid || claims.Subject != "guest" {
-		return "", &auth.InvalidTokenError{Err: errors.New("invalid token")}
+		return "", &authService.InvalidTokenError{Err: errors.New("invalid token")}
 	}
 
 	return claims.GroupID, nil
 }
 
 func (a *AuthService) CreateAuthJWT(userID string) (string, error) {
-	u, err := a.groupStore.GetUser(userID)
+	user, err := a.userStore.GetUser(userID)
 	if err != nil {
 		if errors.Is(err, database.ErrUserNotFound) {
-			return "", user.ErrUserNotFound
+			return "", userService.ErrUserNotFound
 		}
 		return "", err
 	}
 
-	claims := auth.AuthClaims{
+	claims := authService.AuthClaims{
 		RegisteredClaims: jwt.RegisteredClaims{
 			// TODO: Make this configurable
 			Issuer:    "super-santa",
-			Subject:   u.ID,
+			Subject:   user.ID,
 			IssuedAt:  jwt.NewNumericDate(time.Now()),
 			ExpiresAt: jwt.NewNumericDate(time.Now().Add(time.Duration(a.config.Auth.JWT.AuthExpire) * time.Second)),
 		},
-		GroupID: u.GroupID,
-		IsAdmin: u.IsAdmin,
+		GroupID: user.GroupID,
+		IsAdmin: user.IsAdmin,
 	}
 
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
 	return token.SignedString([]byte(a.config.Auth.JWT.Secret))
 }
 
-func (a *AuthService) VerifyAuthJWT(tokenString string) (*auth.AuthClaims, error) {
-	claims := &auth.AuthClaims{}
+func (a *AuthService) VerifyAuthJWT(tokenString string) (*authService.AuthClaims, error) {
+	claims := &authService.AuthClaims{}
 	token, err := jwt.ParseWithClaims(tokenString, claims, func(token *jwt.Token) (any, error) {
 		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
-			return nil, &auth.InvalidTokenError{Err: errors.New("unexpected signing method")}
+			return nil, &authService.InvalidTokenError{Err: errors.New("unexpected signing method")}
 		}
 		return []byte(a.config.Auth.JWT.Secret), nil
 	})
 	if err != nil {
-		return nil, &auth.InvalidTokenError{Err: err}
+		return nil, &authService.InvalidTokenError{Err: err}
 	}
 	if !token.Valid || claims.Subject == "guest" {
-		return nil, &auth.InvalidTokenError{Err: errors.New("invalid token")}
+		return nil, &authService.InvalidTokenError{Err: errors.New("invalid token")}
 	}
 
 	return claims, nil
@@ -131,7 +133,7 @@ func (a *AuthService) srpCompleteLogin(serverSession *srp.ServerSession, clientP
 
 	// Verify client's authenticator
 	if !serverSession.VerifyClientAuthenticator(clientAuth) {
-		return nil, nil, auth.ErrSrpAuthenticator
+		return nil, nil, authService.ErrSrpAuthenticator
 	}
 
 	// Compute server's authenticator to send back to client
@@ -140,7 +142,7 @@ func (a *AuthService) srpCompleteLogin(serverSession *srp.ServerSession, clientP
 	return sessionKey, serverAuth, nil
 }
 
-func (a *AuthService) srpGetChallenge(id string, verifier string) (serverSession *srp.ServerSession, challenge *auth.SrpChallenge, err error) {
+func (a *AuthService) srpGetChallenge(id string, verifier string) (serverSession *srp.ServerSession, challenge *authService.SrpChallenge, err error) {
 	parts := strings.Split(verifier, ".")
 	if len(parts) != 2 {
 		return nil, nil, errors.New("verifier is not valid")
@@ -161,7 +163,7 @@ func (a *AuthService) srpGetChallenge(id string, verifier string) (serverSession
 
 	serverPubKey := serverSession.GetB()
 
-	challenge = &auth.SrpChallenge{
+	challenge = &authService.SrpChallenge{
 		Salt:         hex.EncodeToString(salt),
 		ServerPubKey: hex.EncodeToString(serverPubKey),
 	}
@@ -169,23 +171,23 @@ func (a *AuthService) srpGetChallenge(id string, verifier string) (serverSession
 	return serverSession, challenge, nil
 }
 
-func (a *AuthService) InitiateGroupLogin(groupID string) (sessionID string, challenge *auth.SrpChallenge, err error) {
-	g, err := a.groupStore.GetGroup(groupID)
+func (a *AuthService) InitiateGroupLogin(groupID string) (sessionID string, challenge *authService.SrpChallenge, err error) {
+	group, err := a.groupStore.GetGroup(groupID)
 	if err != nil {
 		if errors.Is(err, database.ErrGroupNotFound) {
-			return "", nil, group.ErrGroupNotFound
+			return "", nil, groupService.ErrGroupNotFound
 		}
 		return "", nil, err
 	}
 
-	serverSession, challenge, err := a.srpGetChallenge(groupID, g.SecretVerifier)
+	serverSession, challenge, err := a.srpGetChallenge(groupID, group.SecretVerifier)
 	if err != nil {
 		return "", nil, err
 	}
 
-	sessionID = generateSessionID(auth.LoginSessionTypeGroup, groupID)
-	a.loginSessionStore[sessionID] = auth.LoginSession{
-		LoginType:     auth.LoginSessionTypeGroup,
+	sessionID = generateSessionID(authService.LoginSessionTypeGroup, groupID)
+	a.loginSessionStore[sessionID] = authService.LoginSession{
+		LoginType:     authService.LoginSessionTypeGroup,
 		ServerSession: serverSession,
 		ID:            groupID,
 	}
@@ -193,37 +195,37 @@ func (a *AuthService) InitiateGroupLogin(groupID string) (sessionID string, chal
 	return sessionID, challenge, nil
 }
 
-func (a *AuthService) InitiateUserLogin(groupID string, email string) (sessionID string, challenge *auth.SrpChallenge, err error) {
-	u, err := a.groupStore.GetGroupUserByEmail(groupID, email)
+func (a *AuthService) InitiateUserLogin(groupID string, email string) (sessionID string, challenge *authService.SrpChallenge, err error) {
+	user, err := a.userStore.GetGroupUserByEmail(groupID, email)
 	if err != nil {
 		if errors.Is(err, database.ErrUserNotFound) {
-			return "", nil, user.ErrUserNotFound
+			return "", nil, userService.ErrUserNotFound
 		}
 		return "", nil, err
 	}
 
-	serverSession, challenge, err := a.srpGetChallenge(u.Email, u.PasswordVerifier)
+	serverSession, challenge, err := a.srpGetChallenge(user.Email, user.PasswordVerifier)
 	if err != nil {
 		return "", nil, err
 	}
 
-	sessionID = generateSessionID(auth.LoginSessionTypeUser, u.ID)
-	a.loginSessionStore[sessionID] = auth.LoginSession{
-		LoginType:     auth.LoginSessionTypeUser,
+	sessionID = generateSessionID(authService.LoginSessionTypeUser, user.ID)
+	a.loginSessionStore[sessionID] = authService.LoginSession{
+		LoginType:     authService.LoginSessionTypeUser,
 		ServerSession: serverSession,
-		ID:            u.ID,
+		ID:            user.ID,
 	}
 
 	return sessionID, challenge, nil
 }
 
-func (a *AuthService) CompleteLogin(sessionType auth.LoginSessionType, sessionID string, authData *auth.SrpAuth) (loginID string, session *auth.SrpSession, err error) {
+func (a *AuthService) CompleteLogin(sessionType authService.LoginSessionType, sessionID string, authData *authService.SrpAuth) (loginID string, session *authService.SrpSession, err error) {
 	loginSession, exists := a.loginSessionStore[sessionID]
 	if !exists {
-		return "", nil, &auth.InvalidSessionError{Err: errors.New("invalid session ID")}
+		return "", nil, &authService.InvalidSessionError{Err: errors.New("invalid session ID")}
 	}
 	if loginSession.LoginType != sessionType {
-		return "", nil, &auth.InvalidSessionError{Err: errors.New("session type mismatch")}
+		return "", nil, &authService.InvalidSessionError{Err: errors.New("session type mismatch")}
 	}
 
 	defer delete(a.loginSessionStore, sessionID)
@@ -247,14 +249,14 @@ func (a *AuthService) CompleteLogin(sessionType auth.LoginSessionType, sessionID
 		return "", nil, err
 	}
 
-	return loginSession.ID, &auth.SrpSession{
+	return loginSession.ID, &authService.SrpSession{
 		SessionKey: hex.EncodeToString(sessionKey),
 		ServerAuth: hex.EncodeToString(serverAuth),
 	}, nil
 }
 
 // FIXME: Use a cryptographically secure random generator
-func generateSessionID(prefix auth.LoginSessionType, ID string) string {
+func generateSessionID(prefix authService.LoginSessionType, ID string) string {
 	h := sha256.New()
 	h.Write([]byte(ID))
 	h.Write([]byte(time.Now().String()))

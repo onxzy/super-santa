@@ -18,6 +18,7 @@ type DB struct {
 func NewDB(lc fx.Lifecycle, log *zap.Logger, config *utils.Config) *DB {
 
 	logger := zapgorm2.New(log.Named("gorm"))
+	logger.IgnoreRecordNotFoundError = true
 
 	db, err := gorm.Open(sqlite.Open(config.DB.SQLitePath), &gorm.Config{
 		Logger: logger,

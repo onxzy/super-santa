@@ -31,6 +31,16 @@ type User struct {
 func (u *User) BeforeCreate(tx *gorm.DB) (err error) {
 	// UUID version 4
 	u.ID = uuid.NewString()
+
+	// Check if group exists
+	var count int64
+	if err := tx.Model(&Group{}).Where("id = ?", u.GroupID).Count(&count).Error; err != nil {
+		return err
+	}
+	if count == 0 {
+		return errors.New("group does not exist")
+	}
+
 	return
 }
 
