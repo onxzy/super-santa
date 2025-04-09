@@ -65,15 +65,22 @@ export default function NewGroup() {
       <div id='NEW_GROUP_STEP_2' className='flex flex-col gap-y-10 p-10 w-200 outline-1 outline-beige-500 rounded-xl shadow-sm-beige'>
         <p className='text-2xl text-center font-extrabold'>Créer un nouveau groupe</p>
 
-        <div id='INFO' className='grid grid-cols-2 place-content-start gap-x-5 gap-y-5'>
-          <p className='text-2xl text-left font-extrabold'>1</p>
-          <p className='text-xl text-left'>Invitez les participants en leur partagant le lien de connexion au groupe visible dans le panneau d’administration.</p>
+        <div id='INFO' className='flex flex-col gap-y-5'>
+          <div className='flex gap-x-5 items-center'>
+            <p className='text-2xl text-left font-extrabold'>1</p>
+            <p className='text-xl text-left grow'>Invitez les participants en leur partagant le lien de connexion au groupe visible dans le panneau d’administration.</p>
+          </div>
 
+          <div className='flex gap-x-5 items-center'>
           <p className='text-2xl text-left font-extrabold'>2</p>
           <p className='text-xl text-left'>Une fois tout vos participants inscrits, procédez au tirage depuis votre pannel d’administration</p>
+          </div>
 
+          <div className='flex gap-x-5 items-center'>
           <p className='text-2xl text-left font-extrabold'>3</p>
           <p className='text-xl text-left'>Les participants pourrons découvrir la personne qui leur a été assignée depuis leur compte</p>
+          </div>
+
         </div>
 
         <PrimaryButton

@@ -28,6 +28,10 @@ export default function Home() {
               text="En avant"
               onClick={() => router.push('/new-group')}
             />
+            <PrimaryButton
+              text="Dashboard"
+              onClick={() => router.push('/dashboard')}
+            />
           </div>
         </div>
 
