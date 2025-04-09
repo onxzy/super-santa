@@ -3,7 +3,6 @@ import { useRouter } from 'next/navigation'
 import Input from '@/components/Input';
 import { useState } from 'react';
 import PrimaryButton from '@/components/PrimaryButton';
-import {SuperSantaAPI} from 'super-santa-sdk';
 
 export default function NewGroup() {
   const router = useRouter();
