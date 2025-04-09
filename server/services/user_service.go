@@ -50,3 +50,7 @@ func (s *UserService) UpdateUser(user *models.User) error {
 
 	return nil
 }
+
+func (s *UserService) DeleteUser(userID string) error {
+	return s.userStore.DeleteUser(userID)
+}

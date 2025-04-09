@@ -36,6 +36,8 @@ func (gc *GroupController) RegisterRoutes(router *gin.RouterGroup, authMiddlewar
 	authRouter.PUT("/wishes", gc.UpdateWishes)
 	authRouter.GET("/draw", gc.InitDraw)
 	authRouter.POST("/draw", gc.FinishDraw)
+	authRouter.DELETE("/user/:user_id", gc.DeleteUser)
+	authRouter.DELETE("/user", gc.LeaveGroup)
 }
 
 // Create Group
@@ -274,4 +276,77 @@ func (gc *GroupController) FinishDraw(c *gin.Context) {
 	}
 
 	c.Status(200)
+}
+
+func (gc *GroupController) DeleteUser(c *gin.Context) {
+	claims := c.MustGet("claims").(*authService.AuthClaims)
+	groupID := claims.GroupID
+
+	if !claims.IsAdmin {
+		c.JSON(403, gin.H{"error": "Forbidden"})
+		return
+	}
+
+	userID := c.Param("user_id")
+	if userID == "" {
+		c.JSON(400, gin.H{"error": "user_id is required"})
+		return
+	}
+
+	group, err := gc.groupService.GetGroup(groupID)
+	if err != nil {
+		if errors.Is(err, groupService.ErrGroupNotFound) {
+			c.JSON(404, gin.H{"error": "Group not found"})
+			return
+		}
+		c.JSON(500, gin.H{"error": err.Error()})
+		return
+	}
+
+	if group.Results != nil {
+		c.JSON(409, gin.H{"error": "Draw already done"})
+		return
+	}
+
+	err = gc.userService.DeleteUser(userID)
+	if err != nil {
+		c.JSON(500, gin.H{"error": err.Error()})
+		return
+	}
+
+	c.Status(204)
+}
+
+func (gc *GroupController) LeaveGroup(c *gin.Context) {
+	claims := c.MustGet("claims").(*authService.AuthClaims)
+	userID := claims.Subject
+	groupID := claims.GroupID
+
+	if !claims.IsAdmin {
+		c.JSON(403, gin.H{"error": "Forbidden"})
+		return
+	}
+
+	group, err := gc.groupService.GetGroup(groupID)
+	if err != nil {
+		if errors.Is(err, groupService.ErrGroupNotFound) {
+			c.JSON(404, gin.H{"error": "Group not found"})
+			return
+		}
+		c.JSON(500, gin.H{"error": err.Error()})
+		return
+	}
+
+	if group.Results != nil {
+		c.JSON(409, gin.H{"error": "Draw already done"})
+		return
+	}
+
+	err = gc.userService.DeleteUser(userID)
+	if err != nil {
+		c.JSON(500, gin.H{"error": err.Error()})
+		return
+	}
+
+	c.Status(204)
 }

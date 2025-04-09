@@ -236,4 +236,62 @@ export class GroupAPI {
       );
     }
   }
+
+  /**
+   *
+   * @throws {AuthAPIError} AUTH_ERROR, FORBIDDEN
+   * @throws {GroupAPIError} DRAW_DONE
+   */
+  async deleteUser(userID: string): Promise<void> {
+    try {
+      await this.client.delete(`${GroupAPI.basePath}/user/${userID}`);
+    } catch (error) {
+      if (error instanceof ApiError) {
+        if (error.status === 401)
+          throw new AuthAPIError(AuthAPIErrorCode.AUTH_ERROR, error);
+        if (error.status === 403)
+          throw new AuthAPIError(AuthAPIErrorCode.FORBIDDEN, error);
+        if (error.status === 409)
+          throw new GroupAPIError(
+            GroupAPIErrorCode.DRAW_DONE,
+            error,
+            "Draw already done"
+          );
+      }
+      throw new GroupAPIError(
+        GroupAPIErrorCode.UNKNOWN_ERROR,
+        error,
+        "Failed to delete user"
+      );
+    }
+  }
+
+  /**
+   *
+   * @throws {AuthAPIError} AUTH_ERROR, FORBIDDEN
+   * @throws {GroupAPIError} DRAW_DONE
+   * */
+  async leaveGroup(): Promise<void> {
+    try {
+      await this.client.delete(`${GroupAPI.basePath}/user`);
+    } catch (error) {
+      if (error instanceof ApiError) {
+        if (error.status === 401)
+          throw new AuthAPIError(AuthAPIErrorCode.AUTH_ERROR, error);
+        if (error.status === 403)
+          throw new AuthAPIError(AuthAPIErrorCode.FORBIDDEN, error);
+        if (error.status === 409)
+          throw new GroupAPIError(
+            GroupAPIErrorCode.DRAW_DONE,
+            error,
+            "Draw already done"
+          );
+      }
+      throw new GroupAPIError(
+        GroupAPIErrorCode.UNKNOWN_ERROR,
+        error,
+        "Failed to leave group"
+      );
+    }
+  }
 }

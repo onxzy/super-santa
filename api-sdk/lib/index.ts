@@ -394,7 +394,27 @@ export class SuperSantaAPI {
     );
   }
 
-  // TODO:
-  // leaveGroup
-  // removeUser
+  /**
+   * Delete a user from the group.
+   *
+   * **You must be an admin to do this and the draw should not have been done**
+   *
+   * @throws {AuthAPIError} AUTH_ERROR, FORBIDDEN
+   * @throws {GroupAPIError} DRAW_DONE
+   */
+  async deleteUser(userID: string): Promise<void> {
+    return await this.groupAPI.deleteUser(userID);
+  }
+
+  /**
+   * Leave the group.
+   *
+   * **The draw should not have been done**
+   *
+   * @throws {AuthAPIError} AUTH_ERROR, FORBIDDEN
+   * @throws {GroupAPIError} DRAW_DONE
+   */
+  async leaveGroup(): Promise<void> {
+    return await this.groupAPI.leaveGroup();
+  }
 }
