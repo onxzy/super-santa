@@ -40,8 +40,7 @@ export default function Home() {
         alt="Rudolphe"
         width={421}
         height={544}
-        className="h-max"
-        priority
+        className="h-max drop-shadow-sm-black"
         />
       </div>
 
@@ -58,7 +57,7 @@ export default function Home() {
             alt="Serveur"
             width={309}
             height={391}
-            className="h-max"
+            className="h-max drop-shadow-sm-black"
           />
 
           <div id='METHOD_TEXT' className='flex flex-col gap-y-10 py-10 grow'>
