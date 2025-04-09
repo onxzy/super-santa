@@ -36,7 +36,7 @@ export default function Home() {
         alt="Rudolphe"
         width={421}
         height={544}
-        className=""
+        className="h-max"
         priority
         />
       </div>

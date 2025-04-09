@@ -1,5 +1,9 @@
+import PrimaryButton from "@/components/PrimaryButton"; 
+import { useState, createContext} from "react";
+import { useRouter } from 'next/navigation';
 
 export function NewGroup2() {
+  const router = useRouter();
     return (
       <div>
         {/* <h1>Rudolphe</h1> */}
@@ -9,7 +13,7 @@ export function NewGroup2() {
           <div>2</div><div>Une fois tout vos participants inscrits, procédez au tirage depuis votre pannel d’administration</div>
           <div>3</div><div>Les participants pourrons découvrir la personne qui leur a été assignée depuis leur compte</div>
         </div>
-        <Button
+        <PrimaryButton
         text="Suivant"
         onClick={() => router.push('/new-group')} /* /new-group ?? */
       />
