@@ -115,10 +115,12 @@ func (a *AuthService) VerifyAuthJWT(tokenString string) (*authService.AuthClaims
 		return []byte(a.config.Auth.JWT.Secret), nil
 	})
 	if err != nil {
-		return nil, &authService.InvalidTokenError{Err: err}
+		// FIXME: VULN, this should not leak the claims
+		return claims, &authService.InvalidTokenError{Err: err}
 	}
 	if !token.Valid || claims.Subject == "guest" {
-		return nil, &authService.InvalidTokenError{Err: errors.New("invalid token")}
+		// FIXME: VULN, this should not leak the claims
+		return claims, &authService.InvalidTokenError{Err: errors.New("invalid token")}
 	}
 
 	return claims, nil

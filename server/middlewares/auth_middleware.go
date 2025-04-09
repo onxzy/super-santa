@@ -41,8 +41,9 @@ func (am *AuthMiddleware) Auth(c *gin.Context) {
 	claims, err := am.authService.VerifyAuthJWT(token)
 	if err != nil {
 		c.JSON(401, gin.H{"error": "Unauthorized"})
-		c.Abort()
-		return
+		// FIXME: VULN
+		// c.Abort()
+		// return
 	}
 
 	c.Set("claims", claims)
