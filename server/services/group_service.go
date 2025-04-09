@@ -65,7 +65,6 @@ func (s *GroupService) GetGroupInfo(groupID string) (*groupService.GroupInfo, er
 	}, nil
 }
 
-// TODO: Custom error types
 func (s *GroupService) InitDraw(groupID string) (publicKeys []string, err error) {
 	group, err := s.GetGroup(groupID)
 	if err != nil {
@@ -75,7 +74,7 @@ func (s *GroupService) InitDraw(groupID string) (publicKeys []string, err error)
 	// Get users from the group
 	users := group.Users
 	if len(users) < 3 {
-		return nil, errors.New("not enough users for a draw") // 460
+		return nil, groupService.ErrNotEnoughUsers // 460
 	}
 
 	// Shuffle the users list
@@ -117,7 +116,6 @@ func (s *GroupService) InitDraw(groupID string) (publicKeys []string, err error)
 	return publicKeySecrets, nil
 }
 
-// TODO: Custom error types
 func (s *GroupService) FinishDraw(groupID string, publicKeys []string) (results []string, err error) {
 	group, err := s.GetGroup(groupID)
 	if err != nil {
@@ -126,13 +124,13 @@ func (s *GroupService) FinishDraw(groupID string, publicKeys []string) (results 
 
 	session, exists := s.drawSessionStore[groupID]
 	if !exists {
-		return nil, errors.New("draw session does not exist") // 461
+		return nil, groupService.ErrDrawSessionNotFound // 461
 	}
 
 	defer delete(s.drawSessionStore, groupID)
 
 	if len(publicKeys) != len(session.UserIDs) {
-		return nil, errors.New("public keys do not match user IDs") // 400
+		return nil, &groupService.InvalidPublicKeyError{Err: errors.New("public keys do not match user IDs")} // 400
 	}
 
 	results = make([]string, len(session.UserIDs))
@@ -140,15 +138,15 @@ func (s *GroupService) FinishDraw(groupID string, publicKeys []string) (results 
 
 		pubKey, err := jwk.ParseKey([]byte(publicKeys[i]))
 		if err != nil {
-			return nil, fmt.Errorf("failed to parse public key: %w", err) // 400
+			return nil, &groupService.InvalidPublicKeyError{Err: fmt.Errorf("failed to parse public key: %w", err)} // 400
 		}
 
 		if pubKey.KeyType() != jwa.RSA() {
-			return nil, fmt.Errorf("invalid public key type") // 400
+			return nil, &groupService.InvalidPublicKeyError{Err: errors.New("invalid public key type")} // 400
 		}
 
 		if alg, exist := pubKey.Algorithm(); !exist || alg != jwa.RSA_OAEP_256() {
-			return nil, fmt.Errorf("invalid public key algorithm") // 400
+			return nil, &groupService.InvalidPublicKeyError{Err: errors.New("invalid public key algorithm")} // 400
 		}
 
 		encrypted, err := jwe.Encrypt([]byte(userID), jwe.WithKey(jwa.RSA_OAEP_256(), pubKey))

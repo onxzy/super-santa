@@ -1,6 +1,7 @@
 package controllers
 
 import (
+	"errors"
 	"onxzy/super-santa-server/controllers/dto"
 	"onxzy/super-santa-server/database/models"
 	"onxzy/super-santa-server/middlewares"
@@ -123,7 +124,7 @@ func (gc *GroupController) JoinGroup(c *gin.Context) {
 	// Check that group exists
 	_, err = gc.groupService.GetGroup(groupID)
 	if err != nil {
-		if err == groupService.ErrGroupNotFound {
+		if errors.Is(err, groupService.ErrGroupNotFound) {
 			c.JSON(404, gin.H{"error": "Group not found"})
 			return
 		}
@@ -143,7 +144,7 @@ func (gc *GroupController) JoinGroup(c *gin.Context) {
 
 	err = gc.userService.CreateUser(user)
 	if err != nil {
-		if err == userService.ErrUserAlreadyExists {
+		if errors.Is(err, userService.ErrUserAlreadyExists) {
 			c.JSON(409, gin.H{"error": "User already exists"})
 			return
 		}
@@ -168,7 +169,7 @@ func (gc *GroupController) UpdateWishes(c *gin.Context) {
 	// Get user from service
 	user, err := gc.userService.GetUser(userID)
 	if err != nil {
-		if err == userService.ErrUserNotFound {
+		if errors.Is(err, userService.ErrUserNotFound) {
 			c.JSON(404, gin.H{"error": "User not found"})
 			return
 		}
@@ -188,7 +189,6 @@ func (gc *GroupController) UpdateWishes(c *gin.Context) {
 	})
 }
 
-// TODO: Add error handling
 func (gc *GroupController) InitDraw(c *gin.Context) {
 	claims := c.MustGet("claims").(*authService.AuthClaims)
 	groupID := claims.GroupID
@@ -201,7 +201,7 @@ func (gc *GroupController) InitDraw(c *gin.Context) {
 	// Get group from service
 	group, err := gc.groupService.GetGroup(groupID)
 	if err != nil {
-		if err == groupService.ErrGroupNotFound {
+		if errors.Is(err, groupService.ErrGroupNotFound) {
 			c.JSON(404, gin.H{"error": "Group not found"})
 			return
 		}
@@ -216,6 +216,10 @@ func (gc *GroupController) InitDraw(c *gin.Context) {
 
 	publicKeys, err := gc.groupService.InitDraw(groupID)
 	if err != nil {
+		if errors.Is(err, groupService.ErrNotEnoughUsers) {
+			c.JSON(460, gin.H{"error": "Not enough users"})
+			return
+		}
 		c.JSON(500, gin.H{"error": err.Error()})
 		return
 	}
@@ -225,7 +229,6 @@ func (gc *GroupController) InitDraw(c *gin.Context) {
 	})
 }
 
-// TODO: Add error handling
 func (gc *GroupController) FinishDraw(c *gin.Context) {
 	claims := c.MustGet("claims").(*authService.AuthClaims)
 	groupID := claims.GroupID
@@ -237,7 +240,7 @@ func (gc *GroupController) FinishDraw(c *gin.Context) {
 
 	group, err := gc.groupService.GetGroup(groupID)
 	if err != nil {
-		if err == groupService.ErrGroupNotFound {
+		if errors.Is(err, groupService.ErrGroupNotFound) {
 			c.JSON(404, gin.H{"error": "Group not found"})
 			return
 		}
@@ -257,6 +260,15 @@ func (gc *GroupController) FinishDraw(c *gin.Context) {
 	}
 
 	if _, err := gc.groupService.FinishDraw(groupID, req.PublicKeys); err != nil {
+		if errors.Is(err, groupService.ErrDrawSessionNotFound) {
+			c.JSON(461, gin.H{"error": "Draw session not found"})
+			return
+		}
+		var invalidPublicKeyError *groupService.InvalidPublicKeyError
+		if errors.As(err, &invalidPublicKeyError) {
+			c.JSON(400, gin.H{"error": err.Error()})
+			return
+		}
 		c.JSON(500, gin.H{"error": err.Error()})
 		return
 	}

@@ -93,7 +93,6 @@ func (a *AuthService) CreateAuthJWT(userID string) (string, error) {
 
 	claims := authService.AuthClaims{
 		RegisteredClaims: jwt.RegisteredClaims{
-			// TODO: Make this configurable
 			Issuer:    "super-santa",
 			Subject:   user.ID,
 			IssuedAt:  jwt.NewNumericDate(time.Now()),
