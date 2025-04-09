@@ -19,5 +19,5 @@ db:
   sqlitepath: "./data.db"
 
 mail:
-  enabled: true
+  enabled: false
   templates_dir: "./templates/emails"

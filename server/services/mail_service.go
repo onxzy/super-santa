@@ -25,9 +25,10 @@ func NewMailService(config *utils.Config, logger *zap.Logger) *MailService {
 }
 
 type MailData struct {
-	To      []string
-	Subject string
-	Data    map[string]any
+	ToDisplay []string
+	ToMail    []string
+	Subject   string
+	Data      map[string]any
 }
 
 func (s *MailService) sendMail(templateName string, mailData *MailData) error {
@@ -57,8 +58,8 @@ func (s *MailService) sendMail(templateName string, mailData *MailData) error {
 
 	// Build the email
 	headers := make(map[string]string)
-	headers["From"] = smtpConfig.FromEmail
-	headers["To"] = mailData.To[0] // For display purposes
+	headers["From"] = fmt.Sprintf("%s <%s>", smtpConfig.FromName, smtpConfig.FromEmail)
+	headers["To"] = mailData.ToDisplay[0] // For display purposes
 	headers["Subject"] = mailData.Subject
 	headers["MIME-Version"] = "1.0"
 	headers["Content-Type"] = "text/html; charset=UTF-8"
@@ -72,21 +73,22 @@ func (s *MailService) sendMail(templateName string, mailData *MailData) error {
 
 	// Send email
 	addr := fmt.Sprintf("%s:%d", smtpConfig.Host, smtpConfig.Port)
-	if err := smtp.SendMail(addr, auth, smtpConfig.FromEmail, mailData.To, message.Bytes()); err != nil {
-		s.logger.Error("Failed to send email", zap.Strings("to", mailData.To), zap.Error(err))
+	if err := smtp.SendMail(addr, auth, smtpConfig.FromEmail, mailData.ToMail, message.Bytes()); err != nil {
+		s.logger.Error("Failed to send email", zap.Strings("to", mailData.ToMail), zap.Error(err))
 		return fmt.Errorf("failed to send email: %w", err)
 	}
 
-	s.logger.Info("Email sent successfully", zap.Strings("to", mailData.To), zap.String("subject", mailData.Subject))
+	s.logger.Info("Email sent successfully", zap.Strings("to", mailData.ToMail), zap.String("subject", mailData.Subject))
 	return nil
 }
 
 // sendMailToUser is a helper function to send an email to a single user
 func (s *MailService) sendMailToUser(templateName string, user models.User, subject string, data map[string]interface{}) {
 	mailData := &MailData{
-		To:      []string{user.Email},
-		Subject: subject,
-		Data:    data,
+		ToMail:    []string{user.Email},
+		ToDisplay: []string{fmt.Sprintf("%s <%s>", user.Username, user.Email)},
+		Subject:   subject,
+		Data:      data,
 	}
 
 	if err := s.sendMail(templateName, mailData); err != nil {

@@ -47,6 +47,7 @@ type Config struct {
 			Username  string `mapstructure:"username"`
 			Password  string `mapstructure:"password"`
 			FromEmail string `mapstructure:"from_email"`
+			FromName  string `mapstructure:"from_name"`
 		} `mapstructure:"smtp"`
 		Enabled      bool   `mapstructure:"enabled"`
 		TemplatesDir string `mapstructure:"templates_dir"`
