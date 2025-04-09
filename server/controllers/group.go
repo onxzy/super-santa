@@ -9,6 +9,7 @@ import (
 	"onxzy/super-santa-server/services/authService"
 	"onxzy/super-santa-server/services/groupService"
 	"onxzy/super-santa-server/services/userService"
+	"strconv"
 
 	"github.com/gin-gonic/gin"
 )
@@ -83,7 +84,11 @@ type GetGroupInfoResponse = groupService.GroupInfo
 
 func (gc *GroupController) GetGroupInfo(c *gin.Context) {
 	// Get group ID from URL
-	groupID := c.Param("group_id")
+	groupID, err := strconv.Atoi(c.Param("group_id"))
+	if err != nil {
+		c.JSON(400, gin.H{"error": "group_id is required"})
+		return
+	}
 	// Get group info from service
 	groupInfo, err := gc.groupService.GetGroupInfo(groupID)
 	if err != nil {
@@ -153,7 +158,11 @@ func (gc *GroupController) JoinGroup(c *gin.Context) {
 
 func (gc *GroupController) UpdateWishes(c *gin.Context) {
 	claims := c.MustGet("claims").(*authService.AuthClaims)
-	userID := claims.Subject
+	userID, err := strconv.Atoi(claims.Subject)
+	if err != nil {
+		c.JSON(400, gin.H{"error": "jwt subject is not valid"})
+		return
+	}
 
 	var req dto.UpdateWishesRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
@@ -280,8 +289,8 @@ func (gc *GroupController) DeleteUser(c *gin.Context) {
 		return
 	}
 
-	userID := c.Param("user_id")
-	if userID == "" {
+	userID, err := strconv.Atoi(c.Param("user_id"))
+	if err != nil {
 		c.JSON(400, gin.H{"error": "user_id is required"})
 		return
 	}
@@ -312,7 +321,11 @@ func (gc *GroupController) DeleteUser(c *gin.Context) {
 
 func (gc *GroupController) LeaveGroup(c *gin.Context) {
 	claims := c.MustGet("claims").(*authService.AuthClaims)
-	userID := claims.Subject
+	userID, err := strconv.Atoi(claims.Subject)
+	if err != nil {
+		c.JSON(400, gin.H{"error": "jwt subject is not valid"})
+		return
+	}
 	groupID := claims.GroupID
 
 	if claims.IsAdmin {

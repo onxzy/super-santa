@@ -33,6 +33,8 @@ export class SRP {
     password: string,
     salt: string
   ) {
+    console.log(id);
+
     const client = createSRPClient(this.hash, this.prime_group);
     const clientEphemeral = client.generateEphemeral();
     const privateKey = await client.deriveSafePrivateKey(salt, password);
@@ -41,7 +43,7 @@ export class SRP {
       clientEphemeral.secret,
       serverPublicEphemeral,
       salt,
-      id,
+      typeof id == "number" ? (id as unknown as number).toString() : id,
       privateKey
     );
 

@@ -7,6 +7,7 @@ import (
 	"onxzy/super-santa-server/database"
 	"onxzy/super-santa-server/database/models"
 	"onxzy/super-santa-server/services/groupService"
+	"strconv"
 	"strings"
 
 	"github.com/lestrrat-go/jwx/v3/jwa"
@@ -17,7 +18,7 @@ import (
 
 type GroupService struct {
 	groupStore       *database.GroupStore
-	drawSessionStore map[string]groupService.DrawSession
+	drawSessionStore map[int]groupService.DrawSession
 	mailService      *MailService
 	logger           *zap.Logger
 }
@@ -25,7 +26,7 @@ type GroupService struct {
 func NewGroupService(groupStore *database.GroupStore, mailService *MailService, logger *zap.Logger) *GroupService {
 	return &GroupService{
 		groupStore:       groupStore,
-		drawSessionStore: make(map[string]groupService.DrawSession),
+		drawSessionStore: make(map[int]groupService.DrawSession),
 		mailService:      mailService,
 		logger:           logger.Named("group-service"),
 	}
@@ -47,8 +48,8 @@ func (s *GroupService) CreateGroup(group *models.Group, admin *models.User) erro
 	// Send email notification to admin
 	if err := s.mailService.SendGroupCreationNotification(group, admin); err != nil {
 		s.logger.Error("Failed to send group creation email",
-			zap.String("groupID", group.ID),
-			zap.String("adminID", admin.ID),
+			zap.Int("groupID", group.ID),
+			zap.Int("adminID", admin.ID),
 			zap.Error(err))
 		// Continue even if email fails
 	}
@@ -56,7 +57,7 @@ func (s *GroupService) CreateGroup(group *models.Group, admin *models.User) erro
 	return nil
 }
 
-func (s *GroupService) GetGroup(groupID string) (*models.Group, error) {
+func (s *GroupService) GetGroup(groupID int) (*models.Group, error) {
 	group, err := s.groupStore.GetGroup(groupID)
 	if err != nil {
 		if errors.Is(err, database.ErrGroupNotFound) {
@@ -68,7 +69,7 @@ func (s *GroupService) GetGroup(groupID string) (*models.Group, error) {
 	return group, nil
 }
 
-func (s *GroupService) GetGroupInfo(groupID string) (*groupService.GroupInfo, error) {
+func (s *GroupService) GetGroupInfo(groupID int) (*groupService.GroupInfo, error) {
 	group, err := s.groupStore.GetGroup(groupID)
 	if err != nil {
 		if errors.Is(err, database.ErrGroupNotFound) {
@@ -83,7 +84,7 @@ func (s *GroupService) GetGroupInfo(groupID string) (*groupService.GroupInfo, er
 	}, nil
 }
 
-func (s *GroupService) InitDraw(groupID string) (publicKeys []string, err error) {
+func (s *GroupService) InitDraw(groupID int) (publicKeys []string, err error) {
 	group, err := s.GetGroup(groupID)
 	if err != nil {
 		return nil, err
@@ -115,7 +116,7 @@ func (s *GroupService) InitDraw(groupID string) (publicKeys []string, err error)
 	}
 
 	// Create a list of user IDs for the draw session
-	userIDs := make([]string, len(users))
+	userIDs := make([]int, len(users))
 	for i, user := range users {
 		userIDs[i] = user.ID
 	}
@@ -134,7 +135,7 @@ func (s *GroupService) InitDraw(groupID string) (publicKeys []string, err error)
 	return publicKeySecrets, nil
 }
 
-func (s *GroupService) FinishDraw(groupID string, publicKeys []string) (results []string, err error) {
+func (s *GroupService) FinishDraw(groupID int, publicKeys []string) (results []string, err error) {
 	group, err := s.GetGroup(groupID)
 	if err != nil {
 		return nil, err
@@ -167,7 +168,7 @@ func (s *GroupService) FinishDraw(groupID string, publicKeys []string) (results 
 			return nil, &groupService.InvalidPublicKeyError{Err: errors.New("invalid public key algorithm")} // 400
 		}
 
-		encrypted, err := jwe.Encrypt([]byte(userID), jwe.WithKey(jwa.RSA_OAEP_256(), pubKey))
+		encrypted, err := jwe.Encrypt([]byte(strconv.Itoa(userID)), jwe.WithKey(jwa.RSA_OAEP_256(), pubKey))
 		if err != nil {
 			return nil, fmt.Errorf("failed to encrypt user ID: %w", err) // 500
 		}
@@ -184,7 +185,7 @@ func (s *GroupService) FinishDraw(groupID string, publicKeys []string) (results 
 
 	if err := s.mailService.SendDrawCompletionNotification(group, group.Users); err != nil {
 		s.logger.Error("Failed to send draw completion emails",
-			zap.String("groupID", groupID),
+			zap.Int("groupID", groupID),
 			zap.Error(err))
 	}
 

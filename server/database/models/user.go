@@ -4,12 +4,11 @@ import (
 	"errors"
 	"time"
 
-	"github.com/google/uuid"
 	"gorm.io/gorm"
 )
 
 type User struct {
-	ID        string         `gorm:"primaryKey" json:"id"` // ID is a UUID v4 string
+	ID        int            `gorm:"primaryKey" json:"id"`
 	CreatedAt time.Time      `json:"created_at"`
 	UpdatedAt time.Time      `json:"-"`
 	DeletedAt gorm.DeletedAt `json:"-" gorm:"index"`
@@ -18,8 +17,8 @@ type User struct {
 	Email            string `json:"email"`
 	PasswordVerifier string `json:"-"` // Password verifier for SRP
 
-	GroupID string `json:"-" gorm:"uniqueIndex:idx_username_group"` // Foreign key to group
-	IsAdmin bool   `json:"is_admin"`
+	GroupID int  `json:"-" gorm:"uniqueIndex:idx_username_group"` // Foreign key to group
+	IsAdmin bool `json:"is_admin"`
 
 	PublicKeySecret     string `json:"-"` // User public key encrypted with group secret
 	PrivateKeyEncrypted string `json:"-"` // Encrypted user private key with password
@@ -29,9 +28,6 @@ type User struct {
 
 // BeforeCreate hook to generate UUID
 func (u *User) BeforeCreate(tx *gorm.DB) (err error) {
-	// UUID version 4
-	u.ID = uuid.NewString()
-
 	// Check if group exists
 	var count int64
 	if err := tx.Model(&Group{}).Where("id = ?", u.GroupID).Count(&count).Error; err != nil {

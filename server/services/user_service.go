@@ -26,7 +26,7 @@ func NewUserService(userStore *database.UserStore, groupStore *database.GroupSto
 	}
 }
 
-func (s *UserService) GetUser(userID string) (*models.User, error) {
+func (s *UserService) GetUser(userID int) (*models.User, error) {
 	user, err := s.userStore.GetUser(userID)
 	if err != nil {
 		if errors.Is(err, database.ErrUserNotFound) {
@@ -65,13 +65,13 @@ func (s *UserService) CreateUser(user *models.User) error {
 	}
 
 	if adminUser == nil {
-		s.logger.Error("No admin found for group", zap.String("groupID", group.ID))
+		s.logger.Error("No admin found for group", zap.Int("groupID", group.ID))
 	} else {
 		// Send email notifications
 		if err := s.mailService.SendUserJoinedNotification(group, user, adminUser); err != nil {
 			s.logger.Error("Failed to send user joined emails",
-				zap.String("groupID", group.ID),
-				zap.String("userID", user.ID),
+				zap.Int("groupID", group.ID),
+				zap.Int("userID", user.ID),
 				zap.Error(err))
 			// Continue even if email fails
 		}
@@ -91,6 +91,6 @@ func (s *UserService) UpdateUser(user *models.User) error {
 	return nil
 }
 
-func (s *UserService) DeleteUser(userID string) error {
+func (s *UserService) DeleteUser(userID int) error {
 	return s.userStore.DeleteUser(userID)
 }

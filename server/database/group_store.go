@@ -36,7 +36,7 @@ func (s *GroupStore) CreateGroup(group *models.Group) error {
 	return s.db.gorm.Create(group).Error
 }
 
-func (s *GroupStore) GetGroup(id string) (*models.Group, error) {
+func (s *GroupStore) GetGroup(id int) (*models.Group, error) {
 	var group models.Group
 	if err := s.db.gorm.Preload("Users").Where("ID = ?", id).First(&group).Error; err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
@@ -52,7 +52,7 @@ func (s *GroupStore) UpdateGroup(group models.Group) error {
 	return s.db.gorm.Save(group).Error
 }
 
-func (s *GroupStore) DeleteGroup(id string) error {
+func (s *GroupStore) DeleteGroup(id int) error {
 	return s.db.gorm.Delete(&models.Group{}, id).Error
 }
 

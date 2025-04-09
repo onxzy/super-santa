@@ -7,12 +7,12 @@ import (
 
 type GroupClaims struct {
 	jwt.RegisteredClaims
-	GroupID string `json:"group_id"`
+	GroupID int `json:"group_id"`
 }
 
 type AuthClaims struct {
 	jwt.RegisteredClaims
-	GroupID string `json:"group_id"`
+	GroupID int    `json:"group_id"`
 	Email   string `json:"email"`
 	IsAdmin bool   `json:"is_admin"`
 }
@@ -25,9 +25,9 @@ const (
 )
 
 type LoginSession struct {
-	LoginType     LoginSessionType
+	// FIXME: VULN LoginType     LoginSessionType
 	ServerSession *srp.ServerSession
-	ID            string
+	ID            int
 }
 
 type SrpChallenge struct {

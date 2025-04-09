@@ -5,7 +5,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/google/uuid"
 	"gorm.io/gorm"
 )
 
@@ -24,7 +23,7 @@ func (r Results) Value() (driver.Value, error) {
 }
 
 type Group struct {
-	ID        string         `gorm:"primaryKey" json:"id"` // ID is a UUID v4 string
+	ID        int            `gorm:"primaryKey" json:"id"`
 	CreatedAt time.Time      `json:"created_at"`
 	UpdatedAt time.Time      `json:"-"`
 	DeletedAt gorm.DeletedAt `gorm:"index"`
@@ -35,10 +34,4 @@ type Group struct {
 	Results Results `json:"results" gorm:"type:text"` // Results of the draw
 
 	Users []User `json:"users" gorm:"foreignKey:GroupID;constraint:OnDelete:CASCADE"`
-}
-
-func (group *Group) BeforeCreate(tx *gorm.DB) (err error) {
-	// UUID version 4
-	group.ID = uuid.NewString()
-	return
 }

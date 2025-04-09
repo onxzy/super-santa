@@ -9,6 +9,7 @@ import (
 	"onxzy/super-santa-server/services/groupService"
 	"onxzy/super-santa-server/services/userService"
 	"onxzy/super-santa-server/utils"
+	"strconv"
 
 	"github.com/gin-gonic/gin"
 )
@@ -42,7 +43,13 @@ func (ac *AuthController) RegisterRoutes(router *gin.RouterGroup, authMiddleware
 // GetUser
 func (ac *AuthController) GetUser(c *gin.Context) {
 	claims := c.MustGet("claims").(*authService.AuthClaims)
-	u, err := ac.userService.GetUser(claims.Subject)
+	userID, err := strconv.Atoi(claims.Subject)
+	if err != nil {
+		c.JSON(400, gin.H{"error": "jwt subject is not valid"})
+		return
+	}
+
+	u, err := ac.userService.GetUser(userID)
 	if err != nil {
 		if errors.Is(err, userService.ErrUserNotFound) {
 			c.JSON(404, gin.H{"error": err.Error()})
@@ -92,8 +99,8 @@ func (ac *AuthController) GetGroup(c *gin.Context) {
 // Group Challenge
 
 func (ac *AuthController) GetGroupChallenge(c *gin.Context) {
-	groupID := c.Param("group_id")
-	if groupID == "" {
+	groupID, err := strconv.Atoi(c.Param("group_id"))
+	if err != nil {
 		c.JSON(400, gin.H{"error": "group_id is required"})
 		return
 	}
@@ -129,7 +136,7 @@ func (ac *AuthController) PostGroupLogin(c *gin.Context) {
 		ClientAuth:   req.GroupAuth.ClientAuth,
 	}
 
-	groupID, session, err := ac.authService.CompleteLogin(authService.LoginSessionTypeGroup, req.SessionID, groupAuth)
+	groupID, session, err := ac.authService.CompleteLogin(req.SessionID, groupAuth)
 	if err != nil {
 		var invalidSession *authService.InvalidSessionError
 		if errors.As(err, &invalidSession) {
@@ -210,7 +217,8 @@ func (ac *AuthController) PostUserLogin(c *gin.Context) {
 		ClientAuth:   req.UserAuth.ClientAuth,
 	}
 
-	userID, session, err := ac.authService.CompleteLogin(authService.LoginSessionTypeUser, req.SessionID, userAuth)
+	// FIXME: VULN authService.LoginSessionTypeUser
+	userID, session, err := ac.authService.CompleteLogin(req.SessionID, userAuth)
 	if err != nil {
 		var invalidSession *authService.InvalidSessionError
 		if errors.As(err, &invalidSession) {

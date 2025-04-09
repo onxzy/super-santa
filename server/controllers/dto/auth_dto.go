@@ -6,15 +6,15 @@ import (
 )
 
 type GetUserResponse struct {
-	ID        string    `json:"id"`
+	ID        int       `json:"id"`
 	CreatedAt time.Time `json:"created_at"`
 	UpdatedAt time.Time `json:"updated_at"`
 
 	Username string `json:"username"`
 	Email    string `json:"email"`
 
-	GroupID string `json:"group_id"`
-	IsAdmin bool   `json:"is_admin"`
+	GroupID int  `json:"group_id"`
+	IsAdmin bool `json:"is_admin"`
 
 	PublicKeySecret     string `json:"public_key_secret"`     // User public key encrypted with group secret
 	PrivateKeyEncrypted string `json:"private_key_encrypted"` // Encrypted user private key with password
@@ -27,7 +27,7 @@ type GetGroupAuthRequest struct {
 }
 
 type GetGroupAuthResponse struct {
-	GroupID string `json:"group_id"`
+	GroupID int `json:"group_id"`
 }
 
 type GetGroupChallengeResponse struct {

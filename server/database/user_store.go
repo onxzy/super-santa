@@ -52,7 +52,7 @@ func (s *UserStore) CreateUser(user *models.User) error {
 	return nil
 }
 
-func (s *UserStore) GetUser(id string) (*models.User, error) {
+func (s *UserStore) GetUser(id int) (*models.User, error) {
 	var user models.User
 	if err := s.db.gorm.Where("ID = ?", id).First(&user).Error; err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
@@ -63,7 +63,7 @@ func (s *UserStore) GetUser(id string) (*models.User, error) {
 	return &user, nil
 }
 
-func (s *UserStore) GetGroupUserByEmail(groupID string, email string) (*models.User, error) {
+func (s *UserStore) GetGroupUserByEmail(groupID int, email string) (*models.User, error) {
 	var user models.User
 	if err := s.db.gorm.Where("email = ? AND group_id = ?", email, groupID).First(&user).Error; err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
@@ -74,7 +74,7 @@ func (s *UserStore) GetGroupUserByEmail(groupID string, email string) (*models.U
 	return &user, nil
 }
 
-func (s *UserStore) GetGroupUsers(groupID string) ([]models.User, error) {
+func (s *UserStore) GetGroupUsers(groupID int) ([]models.User, error) {
 	var users []models.User
 	if err := s.db.gorm.Where("group_id = ?", groupID).Find(&users).Error; err != nil {
 		return nil, err
@@ -86,6 +86,6 @@ func (s *UserStore) UpdateUser(user *models.User) error {
 	return s.db.gorm.Save(user).Error
 }
 
-func (s *UserStore) DeleteUser(id string) error {
+func (s *UserStore) DeleteUser(id int) error {
 	return s.db.gorm.Unscoped().Where("ID = ?", id).Delete(&models.User{}).Error
 }
