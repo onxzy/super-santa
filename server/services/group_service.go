@@ -12,17 +12,22 @@ import (
 	"github.com/lestrrat-go/jwx/v3/jwa"
 	"github.com/lestrrat-go/jwx/v3/jwe"
 	"github.com/lestrrat-go/jwx/v3/jwk"
+	"go.uber.org/zap"
 )
 
 type GroupService struct {
 	groupStore       *database.GroupStore
 	drawSessionStore map[string]groupService.DrawSession
+	mailService      *MailService
+	logger           *zap.Logger
 }
 
-func NewGroupService(groupStore *database.GroupStore) *GroupService {
+func NewGroupService(groupStore *database.GroupStore, mailService *MailService, logger *zap.Logger) *GroupService {
 	return &GroupService{
 		groupStore:       groupStore,
 		drawSessionStore: make(map[string]groupService.DrawSession),
+		mailService:      mailService,
+		logger:           logger.Named("group-service"),
 	}
 }
 
@@ -35,7 +40,20 @@ func (s *GroupService) CreateGroup(group *models.Group, admin *models.User) erro
 		return errors.New("verifier is not valid")
 	}
 
-	return s.groupStore.CreateGroup(group)
+	if err := s.groupStore.CreateGroup(group); err != nil {
+		return err
+	}
+
+	// Send email notification to admin
+	if err := s.mailService.SendGroupCreationNotification(group, admin); err != nil {
+		s.logger.Error("Failed to send group creation email",
+			zap.String("groupID", group.ID),
+			zap.String("adminID", admin.ID),
+			zap.Error(err))
+		// Continue even if email fails
+	}
+
+	return nil
 }
 
 func (s *GroupService) GetGroup(groupID string) (*models.Group, error) {
@@ -158,8 +176,16 @@ func (s *GroupService) FinishDraw(groupID string, publicKeys []string) (results 
 	}
 
 	group.Results = results
-	if err := s.groupStore.UpdateGroup(group); err != nil {
+	// Create a copy of the group before updating
+	groupCopy := *group
+	if err := s.groupStore.UpdateGroup(groupCopy); err != nil {
 		return nil, fmt.Errorf("failed to update group: %w", err)
+	}
+
+	if err := s.mailService.SendDrawCompletionNotification(group, group.Users); err != nil {
+		s.logger.Error("Failed to send draw completion emails",
+			zap.String("groupID", groupID),
+			zap.Error(err))
 	}
 
 	return results, nil

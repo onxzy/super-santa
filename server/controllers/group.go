@@ -123,17 +123,6 @@ func (gc *GroupController) JoinGroup(c *gin.Context) {
 		return
 	}
 
-	// Check that group exists
-	_, err = gc.groupService.GetGroup(groupID)
-	if err != nil {
-		if errors.Is(err, groupService.ErrGroupNotFound) {
-			c.JSON(404, gin.H{"error": "Group not found"})
-			return
-		}
-		c.JSON(500, gin.H{"error": err.Error()})
-		return
-	}
-
 	user := &models.User{
 		Username:            req.User.Username,
 		Email:               req.User.Email,
@@ -146,6 +135,10 @@ func (gc *GroupController) JoinGroup(c *gin.Context) {
 
 	err = gc.userService.CreateUser(user)
 	if err != nil {
+		if errors.Is(err, groupService.ErrGroupNotFound) {
+			c.JSON(404, gin.H{"error": "Group not found"})
+			return
+		}
 		if errors.Is(err, userService.ErrUserAlreadyExists) {
 			c.JSON(409, gin.H{"error": "User already exists"})
 			return

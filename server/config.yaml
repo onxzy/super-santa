@@ -1,6 +1,11 @@
+host:
+  app_url: http://localhost:3000
+  api_url: http://localhost:8080
+  listen: 0.0.0.0
+  port: 8080
+
 auth:
   jwt:
-    secret: "your-secret-key-here"
     expire: 86400  # 24 hours in seconds
     expire_group: 86400    # 24 hours in seconds
 
@@ -12,3 +17,7 @@ log:
 
 db:
   sqlitepath: "./data.db"
+
+mail:
+  enabled: true
+  templates_dir: "./templates/emails"

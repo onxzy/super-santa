@@ -28,6 +28,7 @@ func main() {
 			database.NewDB,
 			database.NewGroupStore,
 			database.NewUserStore,
+			services.NewMailService,
 			services.NewGroupService,
 			services.NewUserService,
 			services.NewAuthService,
@@ -70,8 +71,7 @@ func server(
 	apiRouter := router.Group("/api/v1")
 	authController.RegisterRoutes(apiRouter.Group("/auth"), authMiddleware)
 	groupController.RegisterRoutes(apiRouter.Group("/group"), authMiddleware)
-
-	srv := &http.Server{Addr: ":8080", Handler: router} // define a web server
+	srv := &http.Server{Addr: config.Host.Listen + ":" + config.Host.Port, Handler: router} // define a web server
 
 	lc.Append(fx.Hook{
 		OnStart: func(ctx context.Context) error {

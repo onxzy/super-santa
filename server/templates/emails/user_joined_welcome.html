@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8" />
+    <title>Welcome to Secret Santa Group</title>
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        line-height: 1.6;
+        color: #333;
+        max-width: 600px;
+        margin: 0 auto;
+      }
+      .container {
+        padding: 20px;
+        background-color: #f8f8f8;
+        border-radius: 5px;
+      }
+      .header {
+        text-align: center;
+        padding-bottom: 20px;
+        border-bottom: 1px solid #ddd;
+        margin-bottom: 20px;
+      }
+      .content {
+        margin-bottom: 20px;
+      }
+      .footer {
+        text-align: center;
+        font-size: 0.8em;
+        color: #777;
+        margin-top: 20px;
+        padding-top: 20px;
+        border-top: 1px solid #ddd;
+      }
+      .button {
+        display: inline-block;
+        padding: 10px 20px;
+        background-color: #4caf50;
+        color: white;
+        text-decoration: none;
+        border-radius: 5px;
+        margin-top: 10px;
+      }
+      .button:hover {
+        background-color: #45a049;
+        color: white;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <div class="header">
+        <h1>🎄 Welcome to Secret Santa! 🎁</h1>
+      </div>
+      <div class="content">
+        <p>Hello {{.UserName}}!</p>
+        <p>
+          You have successfully joined the Secret Santa group
+          <strong>{{.GroupName}}</strong>!
+        </p>
+        <p>
+          When the draw is completed, you'll receive another email notification.
+          You can view your group anytime by clicking the button below:
+        </p>
+        <div style="text-align: center">
+          <a href="{{.AppURL}}/group/{{.GroupID}}" class="button">View Group</a>
+        </div>
+        <p>Happy holidays!</p>
+      </div>
+      <div class="footer">
+        <p>This is an automated message, please do not reply.</p>
+      </div>
+    </div>
+  </body>
+</html>
