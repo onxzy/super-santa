@@ -390,8 +390,10 @@ export class SuperSantaAPI {
       if (userID) break;
     }
 
+    console.log("decrypted userID", userID);
+
     if (userID) {
-      const user = group.users.find((user) => user.id === userID);
+      const user = group.users.find((user) => user.id == userID);
       if (user) return user;
     }
 
