@@ -3,6 +3,7 @@ import { useRouter } from 'next/navigation'
 import Input from '@/components/Input';
 import { useState } from 'react';
 import PrimaryButton from '@/components/PrimaryButton';
+import Box from '@/components/Box';
 
 export default function NewGroup() {
   const router = useRouter();
@@ -18,8 +19,7 @@ export default function NewGroup() {
 
       { step1 &&
 
-      <div id='NEW_GROUP_STEP_1' className='flex flex-col gap-y-10 p-10 w-200 outline-1 outline-beige-500 rounded-xl shadow-sm-beige'>
-        <p className='text-2xl text-center font-extrabold'>Créer un nouveau groupe</p>
+        <Box title='Créer un nouveau groupe' className='w-200'>
 
         <div id='FORM' className='grid grid-cols-2 gap-x-5 gap-y-5'>
           <p className='text-xl text-left'>Nom du groupe</p>
@@ -55,14 +55,13 @@ export default function NewGroup() {
           onClick={() => {setStep1(false); setStep2(true);}}
         />
 
-      </div>
+      </Box>
 
       }
 
       { step2 &&
 
-      <div id='NEW_GROUP_STEP_2' className='flex flex-col gap-y-10 p-10 w-200 outline-1 outline-beige-500 rounded-xl shadow-sm-beige'>
-        <p className='text-2xl text-center font-extrabold'>Créer un nouveau groupe</p>
+        <Box title='Créer un nouveau groupe' className='w-200'>
 
         <div id='INFO' className='flex flex-col gap-y-5'>
           <div className='flex gap-x-5 items-center'>
@@ -86,7 +85,7 @@ export default function NewGroup() {
           text="Suivant"
           onClick={() => {setStep1(true); setStep2(false);}}
         />
-      </div>
+      </Box>
 
       }
 

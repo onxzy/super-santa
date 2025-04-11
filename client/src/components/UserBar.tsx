@@ -28,8 +28,8 @@ const UserCard : React.FC<User> = ({
             <p className='text-xl font-bold'>depuis le :</p>
             <p className='text-xl'>{created_at.toLocaleDateString()}</p>
         </div>
-        <button className='rounded-full text-red-500 outline-1 p-1 outline-red-500 cursor-pointer shadow-sm-red hover:bg-red-500 hover:text-white transition-all duration-300 ease-in-out'>
-          <TbTrash size={42} />
+        <button className='rounded-full text-red-500 outline-1 p-2 outline-red-500 cursor-pointer shadow-sm-red hover:bg-red-500 hover:text-white transition-all duration-300 ease-in-out'>
+          <TbTrash size={30} />
         </button>
       </div>
     );
