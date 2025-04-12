@@ -6,12 +6,13 @@ import PrimaryButton from "./PrimaryButton";
 import { UserSelf } from "super-santa-sdk/dist/api/dto/user";
 import { GroupModel } from "super-santa-sdk/dist/api/dto/group";
 import React from 'react';
+import { UseFormSetError } from "react-hook-form";
 
 
   export interface RegisterProps {
 
     groupName: string;
-    handleRegisterSubmit : (data: RegisterForm) => Promise<void>;
+    handleRegisterSubmit : (data: RegisterForm, setError:UseFormSetError<RegisterForm>) => Promise<void>;
     className?: string;
 
   }
@@ -29,16 +30,17 @@ const Register : React.FC<RegisterProps> = ({groupName, handleRegisterSubmit,cla
         handleSubmit,
         watch,
         formState: { errors },
+        setError,
       } = useForm<RegisterForm>()
-    const onSubmit: SubmitHandler<RegisterForm> = (data) => {
+    const onSubmit: SubmitHandler<RegisterForm> = async (data) => {
         console.log(data);
-        handleRegisterSubmit(data);
+        await handleRegisterSubmit(data,setError);
     }
     return(
         <Box title={`Rejoindre le groupe : ${groupName}`} className={`w-200 ${className}`}>
             <form className="flex flex-col gap-y-10" onSubmit={handleSubmit(onSubmit)}>
             
-            <div className="grid grid-cols-[auto_1fr] gap-x-10 gap-y-5" >
+            <div className="grid grid-cols-[auto_1fr] justify-start gap-x-10 gap-y-5" >
                 <p className="text-xl text-left">Adresse mail</p>
                 <input
                     type="email"
