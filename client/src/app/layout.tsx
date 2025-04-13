@@ -1,22 +1,23 @@
 "use client";
-import { useContext } from "react";
-import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import { Berkshire_Swash } from "next/font/google";
 import "./globals.css";
 import { APIContext, initAPIContext } from "./APIContext";
-import { ToastProvider, ToastContext } from "./ToastContext";
-import Toast from "@/components/ui/Toast";
+import { ToastProvider, ToastContainer } from "./ToastContext";
 
 const berkshireSwash = Berkshire_Swash({
   weight: ["400"],
   subsets: ["latin"],
   display: "swap",
+  preload: true,
+  variable: "--font-serif",
 });
 
 const inter = Inter({
   subsets: ["latin"],
   display: "swap",
+  preload: true,
+  variable: "--font-sans",
 });
 
 export default function RootLayout({
@@ -26,29 +27,17 @@ export default function RootLayout({
 }>) {
   const apiContext = initAPIContext();
   return (
-    <html lang="en" className="scroll-smooth">
+    <html lang="fr">
       <APIContext.Provider value={apiContext}>
         <ToastProvider>
-          <body className={inter.className}>
-            <ToastContainer />
+          <body
+            className={`scroll-smooth ${inter.className} ${berkshireSwash.className}`}
+          >
             {children}
           </body>
+          <ToastContainer />
         </ToastProvider>
       </APIContext.Provider>
     </html>
-  );
-}
-
-function ToastContainer() {
-  const { toast, hideToast } = useContext(ToastContext);
-
-  return (
-    <Toast
-      message={toast.message}
-      type={toast.type}
-      isVisible={toast.isVisible}
-      onClose={hideToast}
-      id={toast.id}
-    />
   );
 }

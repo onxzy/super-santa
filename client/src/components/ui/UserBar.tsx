@@ -2,7 +2,6 @@ import React from "react";
 import type { User } from "super-santa-sdk/dist/api/dto/user.d.ts";
 import { TbTrash } from "react-icons/tb";
 import Avatar from "boring-avatars";
-import { set } from "react-hook-form";
 
 const UserCard: React.FC<
   User & { handleDelete: (userId: string) => Promise<void> }

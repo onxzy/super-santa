@@ -4,7 +4,6 @@ import { SuperSantaAPI } from "super-santa-sdk/dist/index.js";
 import { useState } from "react";
 import { GroupModel } from "super-santa-sdk/dist/api/dto/group";
 import { UserSelf } from "super-santa-sdk/dist/api/dto/user";
-import { set } from "react-hook-form";
 
 export type AuthContext = {
   user: UserSelf;

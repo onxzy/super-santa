@@ -3,7 +3,6 @@
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import PrimaryButton from "@/components/ui/PrimaryButton";
-import { useEffect, useState } from "react";
 
 export default function Home() {
   const router = useRouter();

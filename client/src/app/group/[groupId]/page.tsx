@@ -6,8 +6,8 @@ import type { User } from "super-santa-sdk/dist/api/dto/user.d.ts";
 import Input from "@/components/ui/Input";
 import { useContext, useEffect, useState } from "react";
 import AccentButton from "@/components/ui/AccentButton";
-import { APIContext, AuthContext } from "@/app/APIContext";
-import { useParams, useRouter } from "next/navigation";
+import { APIContext } from "@/app/APIContext";
+import { useRouter } from "next/navigation";
 import Link from "next/link";
 import MatrixPlaceholder from "@/components/ui/MatrixPlaceholder";
 import {
@@ -67,7 +67,7 @@ export default function UserDashboard() {
       await api.updateWishes(wishes);
       await refreshAuthContext();
       showToast("Vos souhaits ont été enregistrés !", "success");
-    } catch (error) {
+    } catch {
       showToast(
         "Une erreur est survenue lors de l'enregistrement des souhaits",
         "error"

@@ -1,7 +1,7 @@
 "use client";
 
 import { APIContext, b64uEncode } from "@/app/APIContext";
-import { createContext, useContext, useEffect, useState } from "react";
+import { useContext, useEffect, useState } from "react";
 import { GroupInfo } from "super-santa-sdk/dist/api/dto/group";
 import { useParams, useRouter } from "next/navigation";
 import LoginGroup, { LoginGroupForm } from "@/components/form/LoginGroup";
@@ -10,17 +10,8 @@ import { AuthAPIError, AuthAPIErrorCode } from "super-santa-sdk/dist/api/auth";
 import Register, { RegisterForm } from "@/components/form/Register";
 import LoginUser from "@/components/form/LoginUser";
 import { useToast } from "@/app/ToastContext";
-import { SuperSantaAPIError } from "super-santa-sdk/dist/index";
-
-export enum Status {
-  LOADING = "LOADING",
-  LOGIN_GROUP = "LOGIN_GROUP",
-  LOGIN_USER = "LOGIN_USER",
-  REGISTER = "REGISTER",
-  DASHBOARD = "DASHBOARD",
-}
-
-export const GroupContext = createContext<GroupInfo>(null as any);
+import Image from "next/image";
+import { Status, GroupContext } from "./GroupContext";
 
 export default function GroupLayout({
   children,
@@ -162,7 +153,19 @@ export default function GroupLayout({
 
   return status == Status.LOADING ? (
     <div className="flex flex-col h-screen justify-center items-center">
-      <span>Chargement</span>
+      <div className="relative">
+        <div className="h-16 w-16 rounded-full border-4 border-t-red-500 border-r-green-500 border-b-beige-500 border-l-green-500 animate-spin"></div>
+        <div className="absolute top-0 left-0 right-0 bottom-0 flex items-center justify-center">
+          <Image
+            src="/compressed/renne.png"
+            alt="Reindeer"
+            className="h-8 w-auto"
+          />
+        </div>
+      </div>
+      <span className="mt-4 text-sm font-serif text-black-500">
+        Préparation des cadeaux...
+      </span>
     </div>
   ) : status == Status.DASHBOARD && authContext && groupInfo ? (
     <GroupContext.Provider value={groupInfo}>{children}</GroupContext.Provider>

@@ -1,21 +1,20 @@
 "use client";
 
 import Image from "next/image";
-import type { User } from "super-santa-sdk/dist/api/dto/user.d.ts";
 import { useContext, useState } from "react";
 import AccentButton from "@/components/ui/AccentButton";
 import { TbClipboardText } from "react-icons/tb";
 import UserBar from "@/components/ui/UserBar";
 import { useRouter } from "next/navigation";
-import { APIContext, AuthContext, b64uEncode } from "@/app/APIContext";
+import { APIContext } from "@/app/APIContext";
 import Link from "next/link";
-import { GroupContext } from "../layout";
 import { useToast } from "@/app/ToastContext";
 import {
   GroupAPIError,
   GroupAPIErrorCode,
 } from "super-santa-sdk/dist/api/group";
 import { SuperSantaAPIError, SuperSantaAPIErrorCode } from "super-santa-sdk";
+import { GroupContext } from "../GroupContext";
 
 export default function AdminDashboard() {
   const router = useRouter();
@@ -73,7 +72,7 @@ export default function AdminDashboard() {
     }
   };
 
-  let shareLink = `${window.location.protocol}//${window.location.host}/group/${authContext.group.id}${window.location.hash}`;
+  const shareLink = `${window.location.protocol}//${window.location.host}/group/${authContext.group.id}${window.location.hash}`;
 
   return (
     <div className="flex flex-col">

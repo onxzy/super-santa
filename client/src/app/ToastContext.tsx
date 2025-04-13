@@ -1,4 +1,6 @@
+"use client";
 import { createContext, useState, useContext, ReactNode, useRef } from "react";
+import Toast from "@/components/ui/Toast";
 
 export interface ToastMessage {
   id: number;
@@ -29,6 +31,21 @@ export const ToastContext =
 
 export function useToast() {
   return useContext(ToastContext);
+}
+
+// ToastContainer component moved directly into the ToastContext file
+export function ToastContainer() {
+  const { toast, hideToast } = useContext(ToastContext);
+
+  return (
+    <Toast
+      message={toast.message}
+      type={toast.type}
+      isVisible={toast.isVisible}
+      onClose={hideToast}
+      id={toast.id}
+    />
+  );
 }
 
 interface ToastProviderProps {

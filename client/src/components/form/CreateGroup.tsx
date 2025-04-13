@@ -1,6 +1,6 @@
 import Box from "../ui/Box";
 import PrimaryButton from "../ui/PrimaryButton";
-import { useForm, SubmitHandler } from "react-hook-form";
+import { useForm } from "react-hook-form";
 import React from "react";
 
 export type PreCreateGroupProps = {

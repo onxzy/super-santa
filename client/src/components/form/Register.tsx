@@ -3,8 +3,6 @@
 import Box from "../ui/Box";
 import { useForm, SubmitHandler } from "react-hook-form";
 import PrimaryButton from "../ui/PrimaryButton";
-import { UserSelf } from "super-santa-sdk/dist/api/dto/user";
-import { GroupModel } from "super-santa-sdk/dist/api/dto/group";
 import React from "react";
 import { UseFormSetError } from "react-hook-form";
 import SecondaryButton from "../ui/SecondaryButton";

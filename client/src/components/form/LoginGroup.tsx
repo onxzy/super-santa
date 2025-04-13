@@ -1,6 +1,6 @@
 import Box from "../ui/Box";
 import PrimaryButton from "../ui/PrimaryButton";
-import { useForm, SubmitHandler, UseFormSetError } from "react-hook-form";
+import { useForm, UseFormSetError } from "react-hook-form";
 import SecondaryButton from "../ui/SecondaryButton";
 import { b64uDecode } from "@/app/APIContext";
 
