@@ -9,6 +9,7 @@ import AccentButton from "@/components/ui/AccentButton";
 import { APIContext, AuthContext } from "@/app/APIContext";
 import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
+import MatrixPlaceholder from "@/components/ui/MatrixPlaceholder";
 
 export default function UserDashboard() {
   const router = useRouter();
@@ -106,9 +107,7 @@ export default function UserDashboard() {
                     {santa.username}
                   </p>
                 ) : (
-                  <p className="text-4xl text-left font-serif">
-                    {"01100010110100011110101101101"}
-                  </p>
+                  <MatrixPlaceholder className="w-full" />
                 )}
               </div>
             </div>
