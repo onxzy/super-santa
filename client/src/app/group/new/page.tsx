@@ -10,6 +10,7 @@ import { useContext } from "react";
 import { APIContext, b64uEncode } from "@/app/APIContext";
 import { ApiError } from "super-santa-sdk/dist/api/client";
 import { UseFormSetError } from "react-hook-form";
+import { useToast } from "@/app/ToastContext";
 
 enum Step {
   NAME = "NAME",
@@ -19,6 +20,7 @@ enum Step {
 
 export default function NewGroup() {
   const router = useRouter();
+  const { showToast } = useToast();
 
   const { api, setAuthContext } = useContext(APIContext);
 
@@ -49,7 +51,10 @@ export default function NewGroup() {
           { email: data.email, username: data.pseudo, password: data.password }
         );
         setAuthContext({ user, group });
-        router.push(`/group/${group.id}#${b64uEncode(data.password)}`);
+        showToast(`Groupe "${group.name}" créé avec succès !`, "success");
+        router.push(
+          `/group/${group.id}#${b64uEncode(PreCreateGroupData.password)}`
+        );
       } catch (error) {
         if (error instanceof ApiError) {
           if (error.status == 400) {

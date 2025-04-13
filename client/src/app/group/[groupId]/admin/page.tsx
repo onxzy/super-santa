@@ -10,6 +10,12 @@ import { useRouter } from "next/navigation";
 import { APIContext, AuthContext, b64uEncode } from "@/app/APIContext";
 import Link from "next/link";
 import { GroupContext } from "../layout";
+import { useToast } from "@/app/ToastContext";
+import {
+  GroupAPIError,
+  GroupAPIErrorCode,
+} from "super-santa-sdk/dist/api/group";
+import { SuperSantaAPIError, SuperSantaAPIErrorCode } from "super-santa-sdk";
 
 export default function AdminDashboard() {
   const router = useRouter();
@@ -17,6 +23,7 @@ export default function AdminDashboard() {
   const groupInfo = useContext(GroupContext);
   const { api, logout, authContext, refreshAuthContext } =
     useContext(APIContext);
+  const { showToast } = useToast();
 
   if (!authContext) return;
 
@@ -26,14 +33,44 @@ export default function AdminDashboard() {
   const [isDrawing, setIsDrawing] = useState(false);
   const handleDraw = async () => {
     setIsDrawing(true);
-    await api.draw(); // TODO: Handle errors
-    await refreshAuthContext();
-    setIsDrawing(false);
+    try {
+      await api.draw();
+      await refreshAuthContext();
+      showToast("Tirage effectué avec succès !", "success");
+    } catch (error) {
+      if (error instanceof GroupAPIError) {
+        if (error.code === GroupAPIErrorCode.NOT_ENOUGH_USERS) {
+          showToast(
+            "Il n'y a pas assez de participants pour effectuer le tirage.",
+            "error"
+          );
+        }
+      } else if (error instanceof SuperSantaAPIError) {
+        if (error.code === SuperSantaAPIErrorCode.BAD_DRAW) {
+          showToast(
+            "Erreur lors du tirage : l'un des participants est corrompu",
+            "error"
+          );
+        }
+      } else {
+        showToast(`Une erreur inattendue est survenue lors du tirage`, "error");
+      }
+    } finally {
+      setIsDrawing(false);
+    }
   };
 
   const handleRemoveUser = async (userId: string) => {
-    await api.deleteUser(userId);
-    await refreshAuthContext();
+    try {
+      await api.deleteUser(userId);
+      await refreshAuthContext();
+      showToast("L'utilisateur a été supprimé avec succès !", "success");
+    } catch (error) {
+      showToast(
+        `Une erreur est survenue lors de la suppression de l'utilisateur`,
+        "error"
+      );
+    }
   };
 
   let shareLink = `${window.location.protocol}//${window.location.host}/group/${authContext.group.id}${window.location.hash}`;
@@ -92,7 +129,7 @@ export default function AdminDashboard() {
                   </p>
                   <div id="DRAW" className="flex flex-col gap-y-2">
                     <AccentButton onClick={handleDraw} disabled={isDrawing}>
-                      Effectuer le tirage
+                      {isDrawing ? "Tirage en cours..." : "Effectuer le tirage"}
                     </AccentButton>
                     <p className="text-base text-center">
                       Attention, cette action est irréversible !
@@ -106,7 +143,7 @@ export default function AdminDashboard() {
                 className="flex flex-col gap-y-3 p-3 bg-beige-500 rounded-2xl"
               >
                 <p className="text-xl text-left">
-                  Lien à partager à tes amis pour qu’ils participent :
+                  Lien à partager à tes amis pour qu'ils participent :
                 </p>
                 <div
                   id="LINK"
@@ -123,6 +160,10 @@ export default function AdminDashboard() {
                     onClick={() => {
                       const value = shareLink;
                       navigator.clipboard.writeText(value);
+                      showToast(
+                        "Lien copié dans le presse-papier !",
+                        "success"
+                      );
                     }}
                   >
                     <TbClipboardText />

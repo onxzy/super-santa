@@ -9,6 +9,8 @@ import { UseFormSetError } from "react-hook-form";
 import { AuthAPIError, AuthAPIErrorCode } from "super-santa-sdk/dist/api/auth";
 import Register, { RegisterForm } from "@/components/form/Register";
 import LoginUser from "@/components/form/LoginUser";
+import { useToast } from "@/app/ToastContext";
+import { SuperSantaAPIError } from "super-santa-sdk/dist/index";
 
 export enum Status {
   LOADING = "LOADING",
@@ -26,6 +28,7 @@ export default function GroupLayout({
   children: React.ReactNode;
 }) {
   const router = useRouter();
+  const { showToast } = useToast();
 
   const [status, setStatus] = useState<Status>(Status.LOADING);
   const { api, authLoading, authContext, setAuthContext } =
@@ -101,6 +104,7 @@ export default function GroupLayout({
 
       setAuthContext({ user, group });
       setStatus(Status.DASHBOARD);
+      showToast(`Connexion réussie ! Bienvenue ${user.username}`, "success");
     } catch (error) {
       if (error instanceof AuthAPIError) {
         switch (error.code) {
@@ -117,15 +121,19 @@ export default function GroupLayout({
             });
             break;
           case AuthAPIErrorCode.GROUP_AUTH_ERROR:
-            // TODO: popup
+            showToast(
+              "Erreur d'authentification au groupe. Veuillez vous reconnecter au groupe.",
+              "error"
+            );
             setStatus(Status.LOGIN_GROUP);
             break;
         }
+      } else {
+        setError("root.serverError", {
+          type: "UNKNOWN_ERROR",
+          message: "Une erreur est survenue",
+        });
       }
-      setError("root.serverError", {
-        type: "UNKNOWN_ERROR",
-        message: "Une erreur est survenue",
-      });
       return;
     }
   };

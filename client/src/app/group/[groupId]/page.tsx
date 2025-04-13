@@ -10,9 +10,15 @@ import { APIContext, AuthContext } from "@/app/APIContext";
 import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import MatrixPlaceholder from "@/components/ui/MatrixPlaceholder";
+import {
+  SuperSantaAPIError,
+  SuperSantaAPIErrorCode,
+} from "super-santa-sdk/dist/index";
+import { useToast } from "@/app/ToastContext";
 
 export default function UserDashboard() {
   const router = useRouter();
+  const { showToast } = useToast();
 
   const [santa, setSanta] = useState<User | null>(null);
 
@@ -23,8 +29,30 @@ export default function UserDashboard() {
 
   useEffect(() => {
     const fetchSanta = async () => {
-      setSanta(await api.parseResult(authContext.group));
-      // TODO: handle error
+      try {
+        setSanta(await api.parseResult(authContext.group));
+      } catch (error) {
+        if (error instanceof SuperSantaAPIError) {
+          if (error.code === SuperSantaAPIErrorCode.BAD_CRYPTO_CONTEXT) {
+            showToast(
+              "Erreur de chiffrement : contexte cryptographique invalide. Veuillez vous reconnecter.",
+              "error"
+            );
+          } else if (error.code === SuperSantaAPIErrorCode.BAD_RESULT) {
+            showToast(
+              "Erreur lors de la récupération du résultat du tirage.",
+              "error"
+            );
+          } else {
+            showToast(
+              `Erreur lors de la récupération du résultat : ${error.message}`,
+              "error"
+            );
+          }
+        } else if (error instanceof Error) {
+          showToast(`Une erreur est survenue : ${error.message}`, "error");
+        }
+      }
     };
     fetchSanta();
   }, []);
@@ -35,16 +63,32 @@ export default function UserDashboard() {
     if (!wishes) return;
 
     setIsChangingWishes(true);
-    await api.updateWishes(wishes);
-    setIsChangingWishes(false);
+    try {
+      await api.updateWishes(wishes);
+      await refreshAuthContext();
+      showToast("Vos souhaits ont été enregistrés !", "success");
+    } catch (error) {
+      showToast(
+        "Une erreur est survenue lors de l'enregistrement des souhaits",
+        "error"
+      );
+    } finally {
+      setIsChangingWishes(false);
+    }
   };
 
   const [isLeaving, setIsLeaving] = useState(false);
   const handleLeave = async () => {
     setIsLeaving(true);
-    await api.leaveGroup();
-    logout();
-    router.push("/");
+    try {
+      await api.leaveGroup();
+      showToast("Vous avez quitté le groupe avec succès", "success");
+      logout();
+      router.push("/");
+    } catch (error) {
+      setIsLeaving(false);
+      showToast("Une erreur est survenue lors de la suppression", "error");
+    }
   };
 
   return (
