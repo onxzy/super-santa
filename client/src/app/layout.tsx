@@ -1,10 +1,9 @@
-'use client'
+"use client";
 import type { Metadata } from "next";
-import { Inter } from 'next/font/google'
+import { Inter } from "next/font/google";
 import { Berkshire_Swash } from "next/font/google";
 import "./globals.css";
-import { APIContext, initAPIContext} from "./APIContext";
-
+import { APIContext, initAPIContext } from "./APIContext";
 
 const berkshireSwash = Berkshire_Swash({
   weight: ["400"],
@@ -24,15 +23,10 @@ export default function RootLayout({
 }>) {
   const apiContext = initAPIContext();
   return (
-    
     <html lang="en" className="scroll-smooth">
-      <APIContext value={apiContext}>
-        <body
-          className={``}
-        >
-          {children}
-        </body>
-      </APIContext>
+      <APIContext.Provider value={apiContext}>
+        <body>{children}</body>
+      </APIContext.Provider>
     </html>
   );
 }

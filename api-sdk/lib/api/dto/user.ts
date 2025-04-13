@@ -20,7 +20,7 @@ export interface User {
   email: string;
   is_admin: boolean;
   wishes: string;
-  created_at: Date;
+  created_at: string;
 }
 
 export interface UserSelf {
@@ -32,6 +32,6 @@ export interface UserSelf {
   public_key_secret: string;
   private_key_encrypted: string;
   wishes: string;
-  created_at: Date;
-  updated_at: Date;
+  created_at: string;
+  updated_at: string;
 }

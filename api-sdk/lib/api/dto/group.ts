@@ -29,8 +29,8 @@ export interface GroupModel {
   name: string;
   results?: string[];
   users: User[];
-  created_at: Date;
-  updated_at: Date;
+  created_at: string;
+  updated_at: string;
 }
 
 export interface GroupInfo {

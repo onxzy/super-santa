@@ -315,7 +315,7 @@ func (gc *GroupController) LeaveGroup(c *gin.Context) {
 	userID := claims.Subject
 	groupID := claims.GroupID
 
-	if !claims.IsAdmin {
+	if claims.IsAdmin {
 		c.JSON(403, gin.H{"error": "Forbidden"})
 		return
 	}

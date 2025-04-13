@@ -87,5 +87,5 @@ func (s *UserStore) UpdateUser(user *models.User) error {
 }
 
 func (s *UserStore) DeleteUser(id string) error {
-	return s.db.gorm.Delete(&models.User{}, id).Error
+	return s.db.gorm.Unscoped().Where("ID = ?", id).Delete(&models.User{}).Error
 }

@@ -134,7 +134,7 @@ export class SuperSantaAPI {
    * **You must call this before loginUser and joinGroup.**
    * This can be used to check the group secret before prompting the user for their email and password or allowing them to join the group.
    *
-   * @throws {AuthAPIError} BAD_GROUP_ID, BAD_SECRET, GROUP_AUTH_ERROR
+   * @throws {AuthAPIError} BAD_GROUP_ID, BAD_SECRET
    */
   async loginGroup(groupId: string, secret: string) {
     const { secretKey } = await this.authAPI.getGroupToken(groupId, secret);
@@ -145,9 +145,9 @@ export class SuperSantaAPI {
    * Login to user using email and password. **You must call loginGroup first.**
    *
    * @throws {SuperSantaAPIError} BAD_CRYPTO_CONTEXT
-   * @throws {AuthAPIError} BAD_EMAIL, BAD_PASSWORD, AUTH_ERROR
+   * @throws {AuthAPIError} BAD_EMAIL, BAD_PASSWORD, GROUP_AUTH_ERROR
    */
-  async loginUser(email: string, password: string): Promise<UserSelf | null> {
+  async loginUser(email: string, password: string): Promise<UserSelf> {
     if (!this.cryptoContext.hasSecretKey()) {
       throw new SuperSantaAPIError(
         SuperSantaAPIErrorCode.BAD_CRYPTO_CONTEXT,
@@ -254,7 +254,7 @@ export class SuperSantaAPI {
       privateKeyEncryptedEncoded,
     } = await this.cryptoContext.createUserKeys(password);
 
-    const group = await this.groupAPI.joinGroup(
+    await this.groupAPI.joinGroup(
       {
         email: email,
         username: username,
@@ -272,6 +272,14 @@ export class SuperSantaAPI {
         SuperSantaAPIErrorCode.UNKNOWN_ERROR,
         null,
         "Failed to login user after joining group"
+      );
+
+    const group = await this.groupAPI.getGroup();
+    if (!group)
+      throw new SuperSantaAPIError(
+        SuperSantaAPIErrorCode.UNKNOWN_ERROR,
+        null,
+        "Failed to get group after joining"
       );
 
     return { group, user };

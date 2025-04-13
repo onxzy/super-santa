@@ -9,7 +9,7 @@ import {
   InitDrawResponse,
   JoinGroupRequest,
 } from "./dto/group";
-import { UpdateWishesRequest, UpdateWishesResponse } from "./dto/user";
+import { UpdateWishesRequest, UpdateWishesResponse, User } from "./dto/user";
 
 export enum GroupAPIErrorCode {
   GROUP_AUTH_ERROR = "GROUP_AUTH_ERROR",
@@ -79,7 +79,7 @@ export class GroupAPI {
       privateKeyEncrypted: string;
       publicKeySecret: string;
     }
-  ): Promise<GroupModel> {
+  ): Promise<User> {
     const groupToken = this.authContext.getGroupToken();
     if (!groupToken) {
       throw new GroupAPIError(
@@ -89,7 +89,7 @@ export class GroupAPI {
       );
     }
 
-    const group = await this.client.post<JoinGroupRequest, GroupModel>(
+    return await this.client.post<JoinGroupRequest, User>(
       `${GroupAPI.basePath}/join`,
       {
         group_token: groupToken,
@@ -102,14 +102,12 @@ export class GroupAPI {
         },
       }
     );
-
-    return group;
   }
 
   async getGroupInfo(groupID: string): Promise<GroupInfo | null> {
     try {
       return await this.client.get<GroupInfo>(
-        `${GroupAPI.basePath}/${groupID}/info`
+        `${GroupAPI.basePath}/info/${groupID}`
       );
     } catch (error) {
       if (error instanceof ApiError) {

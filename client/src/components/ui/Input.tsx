@@ -8,7 +8,14 @@ interface InputProps {
   disabled?: boolean;
 }
 
-const Input: React.FC<InputProps> = ({ type,placeholder, value,onChange, className, disabled }: InputProps) => {
+const Input: React.FC<InputProps> = ({
+  type,
+  placeholder,
+  value,
+  onChange,
+  className,
+  disabled,
+}: InputProps) => {
   return (
     <input
       type={type}
