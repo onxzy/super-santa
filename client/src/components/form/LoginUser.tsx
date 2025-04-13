@@ -63,7 +63,7 @@ export default function LoginUser({
               {...register("password", {
                 required: "Le mot de passe est requis",
                 minLength: {
-                  value: 4, // FIXME:
+                  value: 8,
                   message:
                     "Le mot de passe doit contenir au moins 10 caractères",
                 },

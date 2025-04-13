@@ -1,0 +1,33 @@
+version: "3.8"
+
+services:
+  server:
+    build:
+      context: .
+      dockerfile: docker/server.Dockerfile
+    ports:
+      - "8080:8080"
+    volumes:
+      - ./server/data.db:/app/data/data.db
+      - ./server/config.yaml:/app/config.yaml
+    restart: unless-stopped
+    environment:
+      - TZ=UTC
+
+  client:
+    build:
+      context: .
+      dockerfile: docker/client.Dockerfile
+      args:
+        - NEXT_PUBLIC_API_URL=http://localhost:8080
+    ports:
+      - "3000:3000"
+    restart: unless-stopped
+    depends_on:
+      - server
+    environment:
+      - TZ=UTC
+
+networks:
+  default:
+    name: super-santa-network

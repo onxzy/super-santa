@@ -30,11 +30,15 @@ export default function GroupLayout({
 
   useEffect(() => {
     const fetchGroupInfo = async () => {
-      const group = await api.getGroupInfo(groupId);
-      if (group) {
-        setGroupInfo(group);
-      } else {
-        router.replace("/");
+      try {
+        const group = await api.getGroupInfo(groupId);
+        if (group) {
+          setGroupInfo(group);
+        } else {
+          return router.replace("/");
+        }
+      } catch {
+        return router.replace("/");
       }
     };
 

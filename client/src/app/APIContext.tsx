@@ -23,7 +23,9 @@ export const b64uDecode = (str: string) => {
 
 export const initAPIContext = () => {
   const [api, setAPI] = useState<SuperSantaAPI>(
-    SuperSantaAPI.getInstance({ apiHost: "http://localhost:8080" })
+    SuperSantaAPI.getInstance({
+      apiHost: process.env.NEXT_PUBLIC_API_URL || "http://non:8080",
+    })
   );
   const [authLoading, setAuthLoading] = useState<boolean>(true);
   const [authContext, setAuthContext] = useState<AuthContext | null>(null);

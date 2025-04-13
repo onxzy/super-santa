@@ -61,7 +61,7 @@ const CreateGroup: React.FC<CreateGroupComponentProps> = ({
             {...register("password", {
               required: "Le mot de passe est requis",
               minLength: {
-                value: 4, // FIXME:
+                value: 8,
                 message: "Le mot de passe doit contenir au moins 10 caractères",
               },
               maxLength: {
@@ -85,7 +85,7 @@ const CreateGroup: React.FC<CreateGroupComponentProps> = ({
             {...register("passwordConfirm", {
               required: "La vérification du mot de passe est requise",
               minLength: {
-                value: 4, // FIXME:
+                value: 8,
                 message: "Le mot de passe doit contenir au moins 10 caractères",
               },
               maxLength: {

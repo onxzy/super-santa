@@ -95,7 +95,7 @@ const Register: React.FC<RegisterProps> = ({
               {...register("password", {
                 required: "Mot de passe requis",
                 minLength: {
-                  value: 4, // FIXME:
+                  value: 8,
                   message: "Le mot de passe doit faire au moins 10 caractères",
                 },
                 maxLength: {
@@ -118,7 +118,7 @@ const Register: React.FC<RegisterProps> = ({
               className={`bg-white-500 text-black-500 text-left text-base px-3 py-1 rounded-lg outline-1 outline-beige-500 ${className}`}
               {...register("passwordConfirm", {
                 minLength: {
-                  value: 4, // FIXME:
+                  value: 8,
                   message: "Le mot de passe doit faire au moins 10 caractères",
                 },
                 maxLength: {
