@@ -3,10 +3,9 @@
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import PrimaryButton from "@/components/ui/PrimaryButton";
+import Link from "next/link";
 
 export default function Home() {
-  const router = useRouter();
-
   return (
     <div id="HOME">
       <div id="HEADER" className="flex py-5 gap-x-10 justify-center">
@@ -29,9 +28,9 @@ export default function Home() {
             Offrez ce que vous voulez, personne ne saura que c’est vous.
           </p>
           <div id="BUTTON" className="w-fit">
-            <PrimaryButton onClick={() => router.push("/group/new")}>
-              En avant
-            </PrimaryButton>
+            <Link href="/group/new">
+              <PrimaryButton>En avant</PrimaryButton>
+            </Link>
           </div>
         </div>
 
