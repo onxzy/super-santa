@@ -21,7 +21,6 @@ export default function LoginGroup({
 }) {
   const { hash } = window.location;
   const secret = b64uDecode(hash.replace("#", ""));
-  console.log(secret);
 
   const {
     register,
@@ -61,6 +60,11 @@ export default function LoginGroup({
             </span>
           )}
         </div>
+        {errors.root && (
+          <span className="text-red-500 text-sm text-center">
+            {errors.root.message}
+          </span>
+        )}
 
         <div id="BUTTONS" className="flex flex-col gap-y-5">
           {/* Gérer les 2 submits différents */}

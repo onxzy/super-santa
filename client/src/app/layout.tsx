@@ -33,9 +33,9 @@ export default function RootLayout({
           <body
             className={`scroll-smooth ${inter.className} ${berkshireSwash.className}`}
           >
+            <ToastContainer />
             {children}
           </body>
-          <ToastContainer />
         </ToastProvider>
       </APIContext.Provider>
     </html>

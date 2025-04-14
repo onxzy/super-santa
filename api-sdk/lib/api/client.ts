@@ -42,14 +42,14 @@ export class ApiClient {
     }
   }
 
-  async get<Res>(endpoint: string, headers: HeadersInit = {}): Promise<Res> {
+  get<Res>(endpoint: string, headers: HeadersInit = {}): Promise<Res> {
     return this.fetch<Res>(endpoint, {
       method: "GET",
       headers,
     });
   }
 
-  async post<Req, Res>(
+  post<Req, Res>(
     endpoint: string,
     body: Req,
     headers: HeadersInit = {}
@@ -64,7 +64,7 @@ export class ApiClient {
     });
   }
 
-  async put<Req, Res>(
+  put<Req, Res>(
     endpoint: string,
     body: Req,
     headers: HeadersInit = {}
@@ -79,7 +79,7 @@ export class ApiClient {
     });
   }
 
-  async delete<Res>(endpoint: string, headers: HeadersInit = {}): Promise<Res> {
+  delete<Res>(endpoint: string, headers: HeadersInit = {}): Promise<Res> {
     return this.fetch<Res>(endpoint, {
       method: "DELETE",
       headers,

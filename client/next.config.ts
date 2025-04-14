@@ -1,8 +1,10 @@
 import type { NextConfig } from "next";
 
 const cspHeader = `
-    default-src 'self' ${process.env.NEXT_PUBLIC_API_URL};
-    script-src 'self' 'unsafe-inline';
+    default-src 'self' ${
+      process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080"
+    };
+    script-src 'self' 'unsafe-inline' 'unsafe-eval';
     style-src 'self' 'unsafe-inline';
     img-src 'self' blob: data:;
     font-src 'self';
@@ -16,7 +18,8 @@ const cspHeader = `
 const nextConfig: NextConfig = {
   output: "standalone",
   env: {
-    NEXT_PUBLIC_API_URL: process.env.NEXT_PUBLIC_API_URL,
+    NEXT_PUBLIC_API_URL:
+      process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080",
   },
   async headers() {
     return [

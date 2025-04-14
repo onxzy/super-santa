@@ -74,17 +74,16 @@ export default function GroupLayout({
     } catch (error) {
       if (error instanceof AuthAPIError) {
         if (error.code == AuthAPIErrorCode.BAD_SECRET) {
-          setError("root.serverError", {
+          return setError("secret", {
             type: "BAD_SECRET",
             message: "Mot de passe incorrect",
           });
         }
       }
-      setError("root.serverError", {
+      return setError("root", {
         type: "UNKNOWN_ERROR",
         message: "Une erreur est survenue",
       });
-      return;
     }
     setStatus(next == "login" ? Status.LOGIN_USER : Status.REGISTER);
   };
@@ -124,7 +123,7 @@ export default function GroupLayout({
             break;
         }
       } else {
-        setError("root.serverError", {
+        setError("root", {
           type: "UNKNOWN_ERROR",
           message: "Une erreur est survenue",
         });
@@ -147,7 +146,7 @@ export default function GroupLayout({
       setAuthContext({ user, group });
       setStatus(Status.DASHBOARD);
     } catch (error) {
-      setError("root.serverError", {
+      setError("root", {
         type: "UNKNOWN_ERROR",
         message: "Une erreur est survenue",
       });
@@ -163,7 +162,8 @@ export default function GroupLayout({
           <Image
             src="/compressed/renne.png"
             alt="Reindeer"
-            className="h-8 w-auto"
+            height={54 * 0.8}
+            width={42 * 0.8}
           />
         </div>
       </div>

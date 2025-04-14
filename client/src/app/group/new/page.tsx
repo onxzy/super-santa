@@ -59,7 +59,7 @@ export default function NewGroup() {
         if (error instanceof ApiError) {
           if (error.status == 400) {
             console.error("BAD_REQUEST");
-            setError("root.serverError", {
+            setError("root", {
               type: "400",
               message: "Bad Request",
             });
